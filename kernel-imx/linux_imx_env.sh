@@ -31,5 +31,11 @@ FLASH_DEVICE=""
 ROOTFS_LABEL="rootfs"
 BOOT_LABEL_PATTERN="BOOT*"
 
+# Kernel Image
+KERNEL_IMAGE="Image.gz"
+
+# Log file to keep compilation log
+LOGFILE="${LOGFILE:-./build.log}"
+
 # ===========================================
 # ===========================================
