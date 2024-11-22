@@ -22,7 +22,8 @@ IMX_MKIMAGE_REPO="https://github.com/nxp-imx/imx-mkimage.git"
 IMX_MKIMAGE_BRANCH="lf-6.6.3_1.0.0"
 
 # DDR firmware URL for i.MX8MP
-DDR_FIRMWARE_URL="https://www.nxp.com/lgfiles/NMG/MAD/YOCTO/firmware-imx-8.18.bin"
+DDR_FIRMWARE_URL="https://www.nxp.com/lgfiles/NMG/MAD/YOCTO/de.bin"
+DDR_FIRMWARE_VERSION="8.18"  # Replace with the actual version you need
 
 # ===========================================
 # CROSS COMPILER
@@ -54,7 +55,7 @@ DTBS="$UBOOT_DTB_NAME $UBOOT_DTB_EXTRA"
 # ===========================================
 
 # Default directory for boot tools
-UBOOT_TOOLS_DIR="${UBOOT_TOOLS_DIR:-imx-boot-tools}"
+UBOOT_TOOLS_DIR="imx-boot-tools"
 
 # Set imx-mkimage boot target
 UBOOT_SOC_TARGET="iMX8MP"

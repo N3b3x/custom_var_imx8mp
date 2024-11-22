@@ -32,8 +32,8 @@ log_and_run() {
 usage() {
   echo "Usage: $0 -w <workdir> [-d <device>] [-b <build_target>] [-n] [-v] [-h]"
   echo "  -w <workdir>      : Working directory for the build process"
+  echo "  -b <build_target> : Specific build target (prep, uboot, atf, image, flash, all, clean:<target>). Default is 'all'"
   echo "  -d <device>       : Target device (e.g., /dev/sdX) for flashing the image"
-  echo "  -b <build_target> : Specific build target (uboot, atf, image, flash, all, clean:<target>). Default is 'all'"
   echo "  -n                : Enable dry-run mode for flashing"
   echo "  -v                : Enable verbose output"
   echo "  -h                : Display this help message"
@@ -57,10 +57,12 @@ while getopts "w:d:b:nvh" opt; do
   esac
 done
 
+# Ensure WORKDIR is set
 if [ -z "$WORKDIR" ]; then
   usage
 fi
 
+# Ensure WORKDIR exists
 if [ ! -d "$WORKDIR" ]; then
   mkdir -p "$WORKDIR"
 fi
@@ -146,14 +148,16 @@ prepare() {
   # Prepare boot tools directory
   prepare_boot_tools_dir
 
+  local tools_dir="$WORKDIR/$UBOOT_TOOLS_DIR"
+
   # Prepare ATF
-  clone_or_update_repo "$ATF_REPO" "$ATF_BRANCH" "$WORKDIR/$UBOOT_TOOLS_DIR/imx-atf"
+  clone_or_update_repo "$ATF_REPO" "$ATF_BRANCH" "$tools_dir/imx-atf"
 
   # Prepare META BSP
-  clone_or_update_repo "$META_BSP_REPO" "$META_BSP_BRANCH" "$WORKDIR/$UBOOT_TOOLS_DIR/meta-bsp"
+  clone_or_update_repo "$META_BSP_REPO" "$META_BSP_BRANCH" "$tools_dir/meta-bsp"
 
   # Prepare imx-mkimage
-  clone_or_update_repo "$IMX_MKIMAGE_REPO" "$IMX_MKIMAGE_BRANCH" "$WORKDIR/$UBOOT_TOOLS_DIR/imx-mkimage"
+  clone_or_update_repo "$IMX_MKIMAGE_REPO" "$IMX_MKIMAGE_BRANCH" "$tools_dir/imx-mkimage"
 
   # Prepare DDR firmware
   prepare_ddr_firmware
@@ -189,13 +193,13 @@ prepare_ddr_firmware() {
   mkdir -p "$firmware_dir"
   cd "$firmware_dir"
 
-  if [ ! -f firmware-imx-8.18.bin ]; then
-    wget "$DDR_FIRMWARE_URL" -O firmware-imx-8.18.bin
-    chmod +x firmware-imx-8.18.bin
-    ./firmware-imx-8.18.bin --auto-accept
+  if [ ! -f "firmware-imx-${DDR_FIRMWARE_VERSION}.bin" ]; then
+    wget "$DDR_FIRMWARE_URL" -O "firmware-imx-${DDR_FIRMWARE_VERSION}.bin"
+    chmod +x "firmware-imx-${DDR_FIRMWARE_VERSION}.bin"
+    "./firmware-imx-${DDR_FIRMWARE_VERSION}.bin" --auto-accept
   fi
 
-  cp firmware-imx-8.18/firmware/ddr/synopsys/* "$firmware_dir/"
+  cp "firmware-imx-${DDR_FIRMWARE_VERSION}/firmware/ddr/synopsys/*" "$firmware_dir/"
   log_step "DDR firmware prepared successfully."
 }
 
@@ -205,7 +209,7 @@ prepare_ddr_firmware() {
 prepare_mkimage() {
     log_step "Preparing i.MX mkimage..."
 
-    local boot_tools_dir="$WORKDIR/imx-boot-tools"
+    local boot_tools_dir="$WORKDIR/$UBOOT_TOOLS_DIR"
     local mkimage_dir="$boot_tools_dir/imx-mkimage"
 
     # Ensure imx-boot-tools directory exists
@@ -270,7 +274,7 @@ prepare_mkimage() {
 prepare_and_build_atf() {
   log_step "Preparing and building ARM Trusted Firmware (ATF)..."
 
-  local boot_tools_dir="$WORKDIR/imx-boot-tools"
+  local boot_tools_dir="$WORKDIR/$UBOOT_TOOLS_DIR"
   local atf_dir="$boot_tools_dir/imx-atf"
   local bsp_dir="$boot_tools_dir/meta-variscite-bsp"
   local mkimage_dir="$boot_tools_dir/imx-mkimage"
@@ -324,7 +328,6 @@ prepare_and_build_atf() {
     exit 1
   fi
 }
-
 
 # ===========================================
 # Build Boot Image
