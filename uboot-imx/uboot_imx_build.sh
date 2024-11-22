@@ -93,9 +93,9 @@ check_dependencies() {
 # Clone or update a repository
 # ===========================================
 clone_or_update_repo() {
-  local repo_url=$1
-  local branch=$2
-  local dest_dir=${3:-.}
+  local repo_url=$1       # Repository URL
+  local branch=$2         # Branch to checkout
+  local dest_dir=${3:-.}  # Destination directory (default: current directory)
 
   if $VERBOSE; then
     echo "Cloning/updating repository: $repo_url, branch: $branch, into $dest_dir"
@@ -104,18 +104,61 @@ clone_or_update_repo() {
   if [ -d "$dest_dir" ]; then
     if [ -d "$dest_dir/.git" ]; then
       echo "Repository $dest_dir already exists. Pulling the latest changes..."
-      cd "$dest_dir"
+      cd "$dest_dir" || { echo "Error: Failed to change directory to $dest_dir"; exit 1; }
       git fetch origin
-      git checkout $branch
-      git pull origin $branch || { echo "Error: Failed to pull latest changes from $branch"; exit 1; }
+      git checkout $branch || { echo "Error: Failed to checkout branch $branch"; exit 1; }
+      git pull origin $branch || { echo "Error: Failed to pull latest changes for branch $branch"; exit 1; }
     else
-      echo "Error: Directory $dest_dir exists but is not a Git repository."
-      exit 1
+      if [ -z "$(ls -A "$dest_dir")" ]; then
+        echo "Directory $dest_dir is empty. Cloning repository $repo_url (branch: $branch)..."
+        git clone --branch "$branch" "$repo_url" "$dest_dir" || { echo "Error: Failed to clone repository $repo_url"; exit 1; }
+      else
+        echo "Error: Directory $dest_dir exists but is not empty or a Git repository."
+        echo "Please resolve this issue before proceeding."
+        exit 1
+      fi
     fi
   else
     echo "Cloning repository $repo_url (branch: $branch) into $dest_dir..."
-    git clone --branch $branch $repo_url $dest_dir || { echo "Error: Failed to clone repository $repo_url"; exit 1; }
+    git clone --branch "$branch" "$repo_url" "$dest_dir" || { echo "Error: Failed to clone repository $repo_url"; exit 1; }
   fi
+}
+
+
+# ===========================================
+# Prepare boot tools directory
+# ===========================================
+prepare_boot_tools_dir() {
+    echo "Creating imx-boot-tools directory..."
+    mkdir -p "$WORKDIR/imx-boot-tools"
+    echo "imx-boot-tools directory created successfully."
+}
+
+# ===========================================
+# Prepare Environment
+# ===========================================
+prepare() {
+  log_step "Preparing environment..."
+  
+  # Prepare U-Boot
+  clone_or_update_repo "$UBOOT_REPO" "$UBOOT_BRANCH" "$WORKDIR/uboot-imx"
+
+  # Prepare boot tools directory
+  prepare_boot_tools_dir
+
+  # Prepare ATF
+  clone_or_update_repo "$ATF_REPO" "$ATF_BRANCH" "$WORKDIR/$UBOOT_TOOLS_DIR/imx-atf"
+
+  # Prepare META BSP
+  clone_or_update_repo "$META_BSP_REPO" "$META_BSP_BRANCH" "$WORKDIR/$UBOOT_TOOLS_DIR/meta-bsp"
+
+  # Prepare imx-mkimage
+  clone_or_update_repo "$IMX_MKIMAGE_REPO" "$IMX_MKIMAGE_BRANCH" "$WORKDIR/$UBOOT_TOOLS_DIR/imx-mkimage"
+
+  # Prepare DDR firmware
+  prepare_ddr_firmware
+
+  log_step "Environment prepared successfully."
 }
 
 # ===========================================
@@ -157,36 +200,131 @@ prepare_ddr_firmware() {
 }
 
 # ===========================================
-# Build ARM Trusted Firmware (ATF)
+# Prepare i.MX mkimage
+# ===========================================
+prepare_mkimage() {
+    log_step "Preparing i.MX mkimage..."
+
+    local boot_tools_dir="$WORKDIR/imx-boot-tools"
+    local mkimage_dir="$boot_tools_dir/imx-mkimage"
+
+    # Ensure imx-boot-tools directory exists
+    mkdir -p "$boot_tools_dir"
+
+    # Clone or update the imx-mkimage repository
+    clone_or_update_repo "$IMX_MKIMAGE_REPO" "$IMX_MKIMAGE_BRANCH" "$mkimage_dir"
+
+    # Change to the imx-mkimage directory
+    cd "$mkimage_dir" || { echo "Error: Failed to change to $mkimage_dir"; exit 1; }
+
+    # Copy necessary .c files from iMX8M directory
+    log_step "Copying .c files from iMX8M directory..."
+    for file in iMX8M/*.c; do
+        if [ -e "$file" ]; then
+            cp "$file" "$boot_tools_dir/"
+        else
+            log_step "No .c files found in iMX8M directory."
+            break
+        fi
+    done
+
+    # Copy necessary .sh files from iMX8M directory
+    log_step "Copying .sh files from iMX8M directory..."
+    for file in iMX8M/*.sh; do
+        if [ -e "$file" ]; then
+            cp "$file" "$boot_tools_dir/"
+        else
+            log_step "No .sh files found in iMX8M directory."
+            break
+        fi
+    done
+
+    # Copy necessary .sh files from scripts directory
+    log_step "Copying .sh files from scripts directory..."
+    for file in scripts/*.sh; do
+        if [ -e "$file" ]; then
+            cp "$file" "$boot_tools_dir/"
+        else
+            log_step "No .sh files found in scripts directory."
+            break
+        fi
+    done
+
+    # Ensure the scripts directory exists in the parent directory
+    mkdir -p "$WORKDIR/scripts"
+
+    # Copy dtb_check.sh to the scripts directory
+    if [ -e "dtb_check.sh" ]; then
+        log_step "Copying dtb_check.sh to scripts directory..."
+        cp "dtb_check.sh" "$WORKDIR/scripts/"
+    else
+        log_step "dtb_check.sh not found."
+    fi
+
+    log_step "i.MX mkimage prepared successfully."
+}
+
+# ===========================================
+# Prepare and build ARM Trusted Firmware (ATF)
 # ===========================================
 prepare_and_build_atf() {
-  log_step "Building ARM Trusted Firmware (ATF)..."
-  local atf_dir="$WORKDIR/$UBOOT_TOOLS_DIR/imx-atf"
+  log_step "Preparing and building ARM Trusted Firmware (ATF)..."
 
+  local boot_tools_dir="$WORKDIR/imx-boot-tools"
+  local atf_dir="$boot_tools_dir/imx-atf"
+  local bsp_dir="$boot_tools_dir/meta-variscite-bsp"
+  local mkimage_dir="$boot_tools_dir/imx-mkimage"
+
+  # Ensure imx-boot-tools directory exists
+  mkdir -p "$boot_tools_dir"
+
+  # Clone or update repositories
   clone_or_update_repo "$ATF_REPO" "$ATF_BRANCH" "$atf_dir"
+  clone_or_update_repo "$META_VARISCITE_BSP_REPO" "$META_VARISCITE_BSP_BRANCH" "$bsp_dir"
 
+  # Apply patches to imx-mkimage
+  log_step "Preparing and patching imx-mkimage..."
+  clone_or_update_repo "$IMX_MKIMAGE_REPO" "$IMX_MKIMAGE_BRANCH" "$mkimage_dir"
+
+  cd "$mkimage_dir"
+  local patches=(
+    "$bsp_dir/recipes-bsp/imx-mkimage/imx-boot/0001-iMX8M-soc-allow-dtb-override.patch"
+    "$bsp_dir/recipes-bsp/imx-mkimage/imx-boot/0002-iMX8M-soc-change-padding-of-DDR4-and-LPDDR4-DMEM-fir.patch"
+  )
+
+  # Apply each patch if not already applied
+  for patch in "${patches[@]}"; do
+    if git apply --check "$patch" &>/dev/null; then
+      log_step "Applying patch: $(basename "$patch")"
+      git apply "$patch"
+    else
+      log_step "Patch $(basename "$patch") has already been applied or cannot be applied."
+    fi
+  done
+
+  # Copy soc.mak to the parent directory if required
+  log_step "Copying soc.mak to parent directory..."
+  cp "$mkimage_dir/iMX8M/soc.mak" "$boot_tools_dir"
+
+  # Build ATF
+  log_step "Building ATF..."
   cd "$atf_dir"
   export ARCH=$ARCH_ARM64
   export CROSS_COMPILE=$CROSS_COMPILE_ARM64
   unset LDFLAGS
 
-  # Build ATF
-  if $VERBOSE; then
-    make -j$(nproc) V=1 PLAT=imx8mp bl31
-  else
-    make -j$(nproc) PLAT=imx8mp bl31
-  fi
+  make -j$(nproc) PLAT=imx8mp bl31
 
-  # Ensure the output file exists
-  if [ ! -f "build/imx8mp/release/bl31.bin" ]; then
-    echo "Error: bl31.bin not found after ATF build."
+  # Check and copy the generated bl31.bin
+  if [ -f "build/imx8mp/release/bl31.bin" ]; then
+    cp "build/imx8mp/release/bl31.bin" "$boot_tools_dir"
+    log_step "ATF built and bl31.bin copied successfully."
+  else
+    echo "Error: ATF build failed, bl31.bin not found."
     exit 1
   fi
-
-  # Copy to the tools directory
-  cp build/imx8mp/release/bl31.bin "$WORKDIR/$UBOOT_TOOLS_DIR"
-  log_step "ATF built successfully."
 }
+
 
 # ===========================================
 # Build Boot Image
@@ -290,6 +428,9 @@ main() {
   check_dependencies
 
   case $BUILD_TARGET in
+    "prep")
+      prepare
+      ;;
     "uboot")
       prepare_and_build_uboot_imx
       ;;
