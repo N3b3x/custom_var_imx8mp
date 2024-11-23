@@ -22,8 +22,12 @@ IMX_MKIMAGE_REPO="https://github.com/nxp-imx/imx-mkimage.git"
 IMX_MKIMAGE_BRANCH="lf-6.6.3_1.0.0"
 
 # DDR firmware URL for i.MX8MP
-DDR_FIRMWARE_URL="https://www.nxp.com/lgfiles/NMG/MAD/YOCTO/de.bin"
+# DDR firmware base URL
+DDR_FIRMWARE_BASE_URL="https://www.nxp.com/lgfiles/NMG/MAD/YOCTO/"
 DDR_FIRMWARE_VERSION="8.18"  # Replace with the actual version you need
+
+# Construct the full URL dynamically
+DDR_FIRMWARE_URL="${DDR_FIRMWARE_BASE_URL}firmware-imx-${DDR_FIRMWARE_VERSION}.bin"
 
 # ===========================================
 # CROSS COMPILER
@@ -37,7 +41,7 @@ ARCH_ARM64="arm64"
 ccache --max-size=20G
 
 # Log file to keep compilation log
-LOGFILE="${LOGFILE:-./build.log}"
+LOGFILE="./build.log"
 
 # ===========================================
 # UBOOT DTS and DTB
@@ -45,7 +49,7 @@ LOGFILE="${LOGFILE:-./build.log}"
 
 # Set U-Boot DTB
 UBOOT_DTB_NAME="imx8mp-var-dart-dt8mcustomboard.dtb"
-UBOOT_DTB_EXTRA="imx8mp-var-dart-dt8mcustomboard-legacy.dtb imx8mp-var-som-symphony.dtb"
+UBOOT_DTB_EXTRA="imx8mp-var-som-symphony.dtb"
 
 # Device Tree Blobs (DTBs) for Variscite boards
 DTBS="$UBOOT_DTB_NAME $UBOOT_DTB_EXTRA"
