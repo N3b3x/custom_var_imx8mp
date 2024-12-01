@@ -6,7 +6,28 @@ set -e
 # ===========================================
 # Variables and Paths
 # ===========================================
-source ./kernel_imx_env.sh
+# Resolve the script's actual directory, following symlinks if necessary
+SCRIPT_SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SCRIPT_SOURCE" ]; do
+  SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
+  SCRIPT_SOURCE="$(readlink "$SCRIPT_SOURCE")"
+  # If the symlink is relative, resolve it relative to the current SCRIPT_DIR
+  [[ "$SCRIPT_SOURCE" != /* ]] && SCRIPT_SOURCE="$SCRIPT_DIR/$SCRIPT_SOURCE"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
+
+# Define the environment script name
+ENV_SCRIPT="linux_imx_env.sh"
+ENV_SCRIPT_PATH="$SCRIPT_DIR/$ENV_SCRIPT"
+
+# Source the environment script if it exists
+if [ -f "$ENV_SCRIPT_PATH" ]; then
+  echo "Sourcing environment script: $ENV_SCRIPT_PATH"
+  source "$ENV_SCRIPT_PATH"
+else
+  echo "Error: Environment script not found at $ENV_SCRIPT_PATH"
+  exit 1
+fi
 
 # Redirect all output to both a log file and the terminal
 exec > >(tee -a "$LOGFILE") 2>&1
@@ -205,16 +226,16 @@ clone_or_update_linux_imx() {
 build_kernel() {
   log_step "Starting kernel build process..."
   cd "$WORKDIR/linux-imx"
+  
   export ARCH=$ARCH
   export CROSS_COMPILE=$CROSS_COMPILE
-
-  if [ "$CLEAN_KERNEL" = true ]; then
+  if [ "$CLEAN_KERNEL" = true ] || [ ! -f ".config" ]; then
     log_step "Cleaning kernel build directory with 'make mrproper'..."
     log_and_run make mrproper
-  fi
 
-  log_step "Configuring the kernel using defconfig..."
-  log_and_run make $LINUX_DEFCONFIG
+    log_step "Configuring the kernel using defconfig..."
+    log_and_run make $LINUX_DEFCONFIG
+  fi
 
   log_step "Compiling the kernel..."
   log_and_run make -j$CORES

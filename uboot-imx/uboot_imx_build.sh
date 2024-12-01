@@ -16,14 +16,19 @@ while [ -h "$SCRIPT_SOURCE" ]; do
 done
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
 
+# Define the environment script name
+ENV_SCRIPT="uboot_imx_env.sh"
+ENV_SCRIPT_PATH="$SCRIPT_DIR/$ENV_SCRIPT"
+
 # Source the environment script if it exists
-if [ -f "$SCRIPT_DIR/uboot_imx_env.sh" ]; then
-  echo "Sourcing environment script: $SCRIPT_DIR/uboot_imx_env.sh"
-  source "$SCRIPT_DIR/uboot_imx_env.sh"
+if [ -f "$ENV_SCRIPT_PATH" ]; then
+  echo "Sourcing environment script: $ENV_SCRIPT_PATH"
+  source "$ENV_SCRIPT_PATH"
 else
-  echo "Error: Environment script not found at $SCRIPT_DIR/uboot_imx_env.sh"
+  echo "Error: Environment script not found at $ENV_SCRIPT_PATH"
   exit 1
 fi
+
 
 # Continue with the rest of the script
 echo "Environment script sourced successfully. Proceeding..."

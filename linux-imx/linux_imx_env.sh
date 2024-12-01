@@ -35,7 +35,7 @@ BOOT_LABEL_PATTERN="BOOT*"
 KERNEL_IMAGE="Image.gz"
 
 # Log file to keep compilation log
-LOGFILE="${LOGFILE:-./build.log}"
+LOGFILE="./build.log"
 
 # ===========================================
 # ===========================================
