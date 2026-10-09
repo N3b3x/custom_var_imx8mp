@@ -1,0 +1,7 @@
+# Settings for `shellcheck -x build.sh scripts/*.sh`
+external-sources=true
+source-path=SCRIPTDIR
+# SC2016: single-quoted 'bash -c' bodies are intentional (expanded by the inner shell)
+# SC2153/SC2034: variables come from the sourced config / common.sh
+# SC2012: ls is only used for counting our own .dtb files
+disable=SC2016,SC2153,SC2034,SC2012

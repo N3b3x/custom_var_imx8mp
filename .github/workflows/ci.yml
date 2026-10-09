@@ -1,0 +1,24 @@
+# Fast checks on every push: lint the scripts and make sure every step's
+# explain mode (--dry-run) still runs. A full build is too heavy for CI.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: shellcheck
+        run: shellcheck -x build.sh scripts/*.sh scripts/lib/common.sh scripts/rootfs/*.sh
+
+      - name: explain mode (dry-run) of every step
+        run: |
+          ./build.sh info
+          for step in uboot kernel rootfs image; do
+            ./build.sh --dry-run "$step" > /dev/null
+          done
+          ./build.sh --dry-run -r alpine rootfs > /dev/null
