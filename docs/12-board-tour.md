@@ -333,4 +333,4 @@ exists on your hardware.
 
 ---
 
-← [11 · Using the board](11-using-the-board.md) · [Index](README.md) · [Main README](../README.md) →
+← [11 · Using the board](11-using-the-board.md) · [Index](README.md) · [13 · Secure world](13-secure-world.md) →

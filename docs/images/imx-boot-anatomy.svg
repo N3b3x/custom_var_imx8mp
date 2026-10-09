@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="780" viewBox="0 0 1400 780" role="img" aria-label="Anatomy of imx-boot.bin and where each part is loaded: the Boot ROM copies the SPL with its appended DDR training firmware into on-chip RAM at 0x920000; the SPL loads the training firmware into the DDR PHY and trains the memory; then the SPL reads the FIT image at file offset 0x58000 and copies BL31 to on-chip RAM at 0x970000 and U-Boot with the device tree matching the detected module to DDR at 0x40200000; an OP-TEE image would go to 0x56000000 but is not part of this build.">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e5edf7"/></marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fb7185"/></marker>
+    <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/></marker>
+    <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fbbf24"/></marker>
+    <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#0f192d"/><line x1="0" y1="0" x2="0" y2="8" stroke="#22304d" stroke-width="3"/></pattern>
+  </defs>
+  <style>
+    text { font-family: "Segoe UI", "Helvetica Neue", Arial, "DejaVu Sans", sans-serif; fill: #e5edf7; }
+    .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", "DejaVu Sans Mono", monospace; }
+    .t { font-size: 25px; font-weight: 700; }
+    .st { font-size: 14px; }
+    .col { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
+    .seg { font-size: 13px; font-weight: 700; }
+    .segs { font-size: 11px; }
+    .off { font-size: 11px; }
+    .lbl { font-size: 11.5px; font-weight: 700; }
+    .note { font-size: 12px; }
+  </style>
+  <rect width="1400" height="780" rx="18" fill="#0b1220"/>
+  <rect x="0.5" y="0.5" width="1399" height="779" rx="18" fill="none" stroke="#1e2a44"/>
+  <text class="t" x="30" y="44">Inside imx-boot.bin, and who copies each part where</text>
+  <text class="st" x="30" y="68" style="fill:#9fb0c6">One 1.68 MiB file, written at 32 KiB on the card. Three loaders unpack it: the Boot ROM, then the SPL (twice). Sizes are from this build.</text>
+
+  <text class="col" x="140" y="110" style="fill:#9fb0c6">THE FILE · build/deploy/imx-boot.bin</text>
+  <text class="col" x="770" y="110" style="fill:#9fb0c6">WHERE IT ENDS UP · physical addresses</text>
+
+  <!-- ===== File stack ===== -->
+  <text class="off mono" x="130" y="136" text-anchor="end" style="fill:#8a9bb3">0x00000</text>
+  <rect x="140" y="124" width="360" height="26" fill="#475569"/><text class="seg" x="152" y="142" style="fill:#fff">IVT + boot data</text><text class="segs" x="488" y="142" text-anchor="end" style="fill:#e2e8f0">read by Boot ROM</text>
+
+  <text class="off mono" x="130" y="164" text-anchor="end" style="fill:#8a9bb3">0x00040</text>
+  <rect x="140" y="150" width="360" height="90" fill="#2563eb"/><text class="seg" x="152" y="182" style="fill:#fff">U-Boot SPL</text><text class="segs" x="152" y="200" style="fill:#dbeafe">spl/u-boot-spl.bin · 107 KiB</text><text class="segs" x="152" y="216" style="fill:#dbeafe">detects module, trains DDR, loads FIT</text>
+
+  <rect x="140" y="240" width="360" height="62" fill="#f59e0b"/><text class="seg" x="152" y="264" style="fill:#fff">LPDDR4 training firmware</text><text class="segs" x="152" y="283" style="fill:#fffbeb">1D + 2D, imem + dmem · 72 KiB (NXP blobs)</text>
+
+  <text class="off mono" x="130" y="318" text-anchor="end" style="fill:#8a9bb3">0x2CC00</text>
+  <rect x="140" y="302" width="360" height="26" fill="url(#hatch)" stroke="#26344f"/><text class="segs" x="152" y="319" style="fill:#8a9bb3">CSF slot: HAB signature (empty, no secure boot)</text>
+  <rect x="140" y="328" width="360" height="18" fill="#16223b"/><text class="segs" x="320" y="341" text-anchor="middle" style="fill:#94a3b8">padding</text>
+
+  <text class="off mono" x="130" y="362" text-anchor="end" style="fill:#8a9bb3">0x58000</text>
+  <rect x="140" y="346" width="360" height="26" fill="#6d28d9"/><text class="seg" x="152" y="364" style="fill:#fff">FIT header (u-boot.itb)</text><text class="segs" x="488" y="364" text-anchor="end" style="fill:#ede9fe">table of contents</text>
+
+  <rect x="140" y="372" width="360" height="136" fill="#1d4ed8"/><text class="seg" x="152" y="410" style="fill:#fff">uboot-1 · U-Boot proper</text><text class="segs" x="152" y="428" style="fill:#dbeafe">u-boot-nodtb.bin · 1.07 MiB</text><text class="segs" x="152" y="446" style="fill:#dbeafe">load 0x4020_0000</text>
+
+  <rect x="140" y="508" width="360" height="22" fill="#1d4ed8"/><text class="segs" x="152" y="523">fdt-1 · imx8mp-var-dart-sonataboard.dtb · 72 KiB</text>
+  <rect x="140" y="530" width="360" height="22" fill="#1e3a8a"/><text class="segs" x="152" y="545">fdt-2 · imx8mp-var-som-symphony.dtb · 72 KiB</text>
+  <rect x="140" y="552" width="360" height="22" fill="#123063"/><text class="segs" x="152" y="567">fdt-3 · imx8mp-var-smarc-echo.dtb · 71 KiB</text>
+
+  <rect x="140" y="574" width="360" height="46" fill="#be123c"/><text class="seg" x="152" y="594" style="fill:#fff">atf-1 · TF-A BL31</text><text class="segs" x="152" y="611" style="fill:#ffe4e6">bl31.bin · 43 KiB · load 0x0097_0000</text>
+
+  <rect x="140" y="620" width="360" height="34" fill="#121c33" stroke="#f43f5e" stroke-dasharray="6 5"/><text class="segs" x="152" y="641" style="fill:#fda4af">tee-1 · OP-TEE tee.bin (absent in this build)</text>
+  <text class="off mono" x="130" y="664" text-anchor="end" style="fill:#8a9bb3">0x1AE3C0</text>
+  <line x1="136" y1="660" x2="504" y2="660" stroke="#64748b"/>
+  <text class="segs" x="140" y="684" style="fill:#8a9bb3">end of file (1,762,240 bytes)</text>
+
+  <!-- ===== Memory ===== -->
+  <!-- OCRAM -->
+  <rect x="760" y="122" width="610" height="270" rx="12" fill="#0f192d" stroke="#33415c"/>
+  <text class="lbl" x="776" y="142" style="fill:#cbd5e1">OCRAM · on-chip RAM · 576 KiB · usable before DDR exists</text>
+  <rect x="776" y="152" width="578" height="32" fill="#1d2a45"/><text class="off mono" x="788" y="172" style="fill:#9fb0c6">0x0090_0000</text><text class="segs" x="900" y="172" style="fill:#9fb0c6">Boot ROM workspace</text>
+  <rect x="776" y="184" width="578" height="96" fill="#2563eb"/><text class="off mono" x="788" y="204" style="fill:#dbeafe">0x0092_0000</text><text class="seg" x="900" y="226" style="fill:#fff">U-Boot SPL runs here</text><text class="segs" x="900" y="244" style="fill:#dbeafe">code + data, ≤ 152 KiB; gone once U-Boot starts</text>
+  <rect x="776" y="280" width="578" height="22" fill="#1e3a8a"/><text class="off mono" x="788" y="295" style="fill:#bfdbfe">0x0096_E000</text><text class="segs" x="900" y="295" style="fill:#bfdbfe">SPL stack / BSS</text>
+  <rect x="776" y="302" width="578" height="76" fill="#be123c"/><text class="off mono" x="788" y="322" style="fill:#ffe4e6">0x0097_0000</text><text class="seg" x="900" y="342" style="fill:#fff">TF-A BL31: stays here for good</text><text class="segs" x="900" y="360" style="fill:#ffe4e6">≤ 128 KiB · secure monitor for the life of the system</text>
+
+  <!-- DDR PHY -->
+  <rect x="760" y="404" width="610" height="54" rx="12" fill="#2a1b05" stroke="#f59e0b"/>
+  <text class="lbl" x="776" y="426" style="fill:#fcd34d">DDR PHY · inside the memory controller</text>
+  <text class="segs" x="776" y="445" style="fill:#fcd34d">training firmware runs on the PHY's micro-controller, calibrates LPDDR4 timing, then is discarded</text>
+
+  <!-- DDR -->
+  <rect x="760" y="470" width="610" height="230" rx="12" fill="#0f192d" stroke="#33415c"/>
+  <text class="lbl" x="776" y="490" style="fill:#cbd5e1">DDR · LPDDR4 · 4 GiB · 0x4000_0000 – 0x1_3FFF_FFFF</text>
+  <rect x="776" y="500" width="578" height="74" fill="#1d4ed8"/><text class="off mono" x="788" y="520" style="fill:#dbeafe">0x4020_0000</text><text class="seg" x="900" y="540" style="fill:#fff">U-Boot proper + the DTB for this module</text><text class="segs" x="900" y="558" style="fill:#dbeafe">BL31 enters it at EL2; it then relocates itself to the top of RAM</text>
+  <rect x="776" y="574" width="578" height="18" fill="#16223b"/>
+  <rect x="776" y="592" width="578" height="40" fill="#121c33" stroke="#f43f5e" stroke-dasharray="6 5"/><text class="off mono" x="788" y="616" style="fill:#fda4af">0x5600_0000</text><text class="segs" x="900" y="616" style="fill:#fda4af">OP-TEE · 32 MiB, TZASC-locked (only when built in)</text>
+  <rect x="776" y="632" width="578" height="56" fill="#0b3a36"/><text class="segs" x="900" y="656" style="fill:#5eead4">everything else: later the kernel, its DTB, and Linux's RAM</text><text class="segs" x="900" y="674" style="fill:#5eead4">(see the runtime memory map)</text>
+
+  <!-- ===== arrows ===== -->
+  <path d="M502,196 C620,196 640,232 772,232" fill="none" stroke="#e5edf7" stroke-width="3.0" marker-end="url(#a)"/>
+  <rect x="546" y="172" width="168" height="22" rx="11" fill="#121c33" stroke="#33415c"/><text class="lbl" x="630" y="187" text-anchor="middle">① Boot ROM copies</text>
+
+  <path d="M502,272 C620,272 640,430 756,430" fill="none" stroke="#fbbf24" stroke-width="3.0" marker-end="url(#am)"/>
+  <rect x="546" y="300" width="168" height="22" rx="11" fill="#121c33" stroke="#b45309"/><text class="lbl" x="630" y="315" text-anchor="middle" style="fill:#fbbf24">② SPL → PHY, trains</text>
+
+  <path d="M502,440 C620,440 640,536 772,536" fill="none" stroke="#60a5fa" stroke-width="3.0" marker-end="url(#ab)"/>
+  <path d="M502,541 C600,541 640,546 772,546" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <rect x="534" y="470" width="192" height="22" rx="11" fill="#121c33" stroke="#1d4ed8"/><text class="lbl" x="630" y="485" text-anchor="middle" style="fill:#93c5fd">③ SPL: U-Boot + 1 DTB</text>
+
+  <path d="M502,597 H732 Q744,597 744,585 V352 Q744,340 756,340 H772" fill="none" stroke="#fb7185" stroke-width="3.0" marker-end="url(#ar)"/>
+  <rect x="560" y="586" width="140" height="22" rx="11" fill="#121c33" stroke="#9f1239"/><text class="lbl" x="630" y="601" text-anchor="middle" style="fill:#fb7185">④ SPL: BL31</text>
+
+  <path d="M502,637 C620,637 640,612 772,612" fill="none" stroke="#fb7185" stroke-width="2.6" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+
+  <!-- footer -->
+  <text class="note" x="30" y="726" style="fill:#9fb0c6">Then the SPL jumps to BL31 (EL3). BL31 sets up the secure monitor and the TZASC/CSU/RDC, enters OP-TEE if one was loaded, then ERETs into U-Boot at EL2 (non-secure).</text>
+  <text class="note mono" x="30" y="752" style="fill:#8a9bb3">See it: build/src/uboot-imx/tools/dumpimage -l build/src/imx-mkimage/iMX8M/u-boot.itb   ·   xxd -l 4 build/deploy/imx-boot.bin  →  d100 2041 (IVT tag)</text>
+<g id="icons"><g transform="translate(1338,128) scale(0.833333)" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12v-2" /> <path d="M12 18v-2" /> <path d="M16 12v-2" /> <path d="M16 18v-2" /> <path d="M2 11h1.5" /> <path d="M20 18v-2" /> <path d="M20.5 11H22" /> <path d="M4 18v-2" /> <path d="M8 12v-2" /> <path d="M8 18v-2" /> <rect x="2" y="6" width="20" height="10" rx="2" /></g><g transform="translate(1338,410) scale(0.833333)" fill="none" stroke="#fcd34d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></g><g transform="translate(1338,476) scale(0.833333)" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12v-2" /> <path d="M12 18v-2" /> <path d="M16 12v-2" /> <path d="M16 18v-2" /> <path d="M2 11h1.5" /> <path d="M20 18v-2" /> <path d="M20.5 11H22" /> <path d="M4 18v-2" /> <path d="M8 12v-2" /> <path d="M8 18v-2" /> <rect x="2" y="6" width="20" height="10" rx="2" /></g><g transform="translate(470,92) scale(0.916667)" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v11.5" /> <path d="M14 2v5a1 1 0 0 0 1 1h5" /> <path d="M8 12v-1" /> <path d="M8 18v-2" /> <path d="M8 7V6" /> <circle cx="8" cy="20" r="2" /></g></g><!--/icons--></svg>

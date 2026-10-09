@@ -2,6 +2,12 @@
 
 [Docs](README.md) › **05 · Root filesystem**
 
+> **In this guide:** what a root filesystem is, the three options (Debian,
+> Alpine, your own), exactly how each is built, and how the kernel hands over
+> to it at boot.
+
+![From Starting kernel to login](images/linux-to-login.svg)
+
 ```bash
 ./build.sh rootfs                    # Debian trixie (default)
 ./build.sh -r alpine rootfs          # Alpine minirootfs, no root needed

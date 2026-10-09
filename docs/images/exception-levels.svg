@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="720" viewBox="0 0 1400 720" role="img" aria-label="Arm exception levels on the i.MX 8M Plus at runtime: TF-A BL31 alone at EL3 owns the switch between worlds; the normal world has U-Boot or the Linux hypervisor stub at EL2, the Linux kernel at EL1 and applications at EL0; the secure world would have OP-TEE at S-EL1 and trusted applications at S-EL0, which this build does not include. Arrows show the instructions that cross levels: svc, hvc, smc and eret.">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e5edf7"/></marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fb7185"/></marker>
+    <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#0f192d"/><line x1="0" y1="0" x2="0" y2="8" stroke="#22304d" stroke-width="3"/></pattern>
+  </defs>
+  <style>
+    text { font-family: "Segoe UI", "Helvetica Neue", Arial, "DejaVu Sans", sans-serif; fill: #e5edf7; }
+    .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", "DejaVu Sans Mono", monospace; }
+    .t { font-size: 25px; font-weight: 700; }
+    .st { font-size: 14px; fill: #9fb0c6; }
+    .el { font-size: 17px; font-weight: 800; fill: #fff; }
+    .elsub { font-size: 10.5px; fill: #fff; }
+    .col { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; }
+    .nm { font-size: 15px; font-weight: 700; }
+    .sm { font-size: 12px; fill: #9fb0c6; }
+    .ins { font-size: 12px; font-weight: 700; }
+    .log { font-size: 11.5px; fill: #e5edf7; }
+    .exp { font-size: 12px; fill: #9fb0c6; }
+  </style>
+  <rect width="1400" height="720" rx="18" fill="#0b1220"/>
+  <rect x="0.5" y="0.5" width="1399" height="719" rx="18" fill="none" stroke="#1e2a44"/>
+
+  <text class="t" x="30" y="44">Who runs where: exception levels and the two worlds</text>
+  <text class="st" x="30" y="68">Higher EL = more privilege. Only code at EL3 can move the CPU between the normal and the secure world.</text>
+
+  <text class="col" x="150" y="106" style="fill:#fda4af">SECURE WORLD</text>
+  <text class="col" x="560" y="106" style="fill:#6ee7b7">NORMAL (NON-SECURE) WORLD</text>
+
+  <!-- EL labels -->
+  <rect x="30" y="120" width="100" height="90" rx="12" fill="#9f1239"/><text class="el" x="80" y="160" text-anchor="middle">EL3</text><text class="elsub" x="80" y="180" text-anchor="middle">most privileged</text>
+  <rect x="30" y="230" width="100" height="90" rx="12" fill="#475569"/><text class="el" x="80" y="270" text-anchor="middle">EL2</text><text class="elsub" x="80" y="290" text-anchor="middle">hypervisor</text>
+  <rect x="30" y="340" width="100" height="90" rx="12" fill="#334155"/><text class="el" x="80" y="380" text-anchor="middle">EL1</text><text class="elsub" x="80" y="400" text-anchor="middle">OS kernel</text>
+  <rect x="30" y="450" width="100" height="90" rx="12" fill="#64748b"/><text class="el" x="80" y="490" text-anchor="middle">EL0</text><text class="elsub" x="80" y="510" text-anchor="middle">applications</text>
+
+  <!-- EL3: spans both worlds -->
+  <rect x="150" y="120" width="780" height="90" rx="12" fill="#be123c"/>
+  <text class="nm" x="170" y="152" style="fill:#fff">TF-A · BL31 · secure monitor</text>
+  <text class="sm" x="170" y="174" style="fill:#ffe4e6">The gate between the worlds. Handles every smc: PSCI (CPU on/off, suspend, reset) and i.MX SiP calls,</text>
+  <text class="sm" x="170" y="192" style="fill:#ffe4e6">and forwards OP-TEE calls when a BL32 exists. Lives in OCRAM at 0x0097_0000 for as long as the board is on.</text>
+
+  <!-- secure column -->
+  <rect x="150" y="230" width="270" height="90" rx="12" fill="url(#hatch)" stroke="#26344f"/>
+  <text class="nm" x="170" y="265" style="fill:#8a9bb3">S-EL2: not present</text>
+  <text class="sm" x="170" y="286">Cortex-A53 is Armv8.0: no secure</text>
+  <text class="sm" x="170" y="302">hypervisor level.</text>
+
+  <rect x="150" y="340" width="270" height="90" rx="12" fill="#121c33" stroke="#f43f5e" stroke-dasharray="6 5" stroke-width="1.5"/>
+  <text class="nm" x="170" y="372" style="fill:#fda4af">OP-TEE OS · BL32</text>
+  <text class="sm" x="170" y="393">trusted OS, its own memory locked</text>
+  <text class="sm" x="170" y="410">by the TZASC · optional, not built</text>
+
+  <rect x="150" y="450" width="270" height="90" rx="12" fill="#121c33" stroke="#f43f5e" stroke-dasharray="6 5" stroke-width="1.5"/>
+  <text class="nm" x="170" y="482" style="fill:#fda4af">Trusted Applications</text>
+  <text class="sm" x="170" y="503">key handling, signing, secure</text>
+  <text class="sm" x="170" y="520">storage · run inside OP-TEE</text>
+
+  <!-- normal column -->
+  <rect x="560" y="230" width="270" height="90" rx="12" fill="#123063" stroke="#3b82f6"/>
+  <text class="nm" x="580" y="262" style="fill:#93c5fd">U-Boot proper · BL33</text>
+  <text class="sm" x="580" y="283">during boot only, then:</text>
+  <text class="sm" x="580" y="301">Linux hyp stub / KVM (nVHE)</text>
+
+  <rect x="560" y="340" width="270" height="90" rx="12" fill="#0f766e"/>
+  <text class="nm" x="580" y="372" style="fill:#fff">Linux kernel 6.18</text>
+  <text class="sm" x="580" y="393" style="fill:#ccfbf1">drivers, scheduler, memory,</text>
+  <text class="sm" x="580" y="410" style="fill:#ccfbf1">filesystems · enters at EL2, runs at EL1</text>
+
+  <rect x="560" y="450" width="270" height="90" rx="12" fill="#0b3a36" stroke="#14b8a6"/>
+  <text class="nm" x="580" y="482" style="fill:#5eead4">User space</text>
+  <text class="sm" x="580" y="503">init, getty, sh, BusyBox,</text>
+  <text class="sm" x="580" y="520">your application</text>
+
+  <!-- normal corridor: smc up, eret down -->
+  <line x1="862" y1="384" x2="862" y2="214" stroke="#fb7185" stroke-width="3.0" marker-end="url(#ar)"/>
+  <rect x="842" y="262" width="40" height="20" rx="10" fill="#121c33" stroke="#9f1239"/><text class="ins mono" x="862" y="276" text-anchor="middle" style="fill:#fb7185">smc</text>
+  <line x1="902" y1="212" x2="902" y2="382" stroke="#e5edf7" stroke-width="3.0" marker-end="url(#a)"/>
+  <rect x="880" y="300" width="44" height="20" rx="10" fill="#121c33" stroke="#33415c"/><text class="ins mono" x="902" y="314" text-anchor="middle">eret</text>
+  <line x1="842" y1="384" x2="832" y2="384" stroke="#fb7185" stroke-width="2.2"/>
+  <line x1="832" y1="382" x2="860" y2="382" stroke="#fb7185" stroke-width="0.0"/>
+  <line x1="902" y1="384" x2="834" y2="384" stroke="#e5edf7" stroke-width="0.0"/>
+
+  <!-- secure corridor: eret down to S-EL1, smc back up -->
+  <line x1="452" y1="212" x2="452" y2="382" stroke="#e5edf7" stroke-width="3.0" stroke-dasharray="5 4" marker-end="url(#a)"/>
+  <rect x="430" y="300" width="44" height="20" rx="10" fill="#121c33" stroke="#33415c"/><text class="ins mono" x="452" y="314" text-anchor="middle">eret</text>
+  <line x1="492" y1="384" x2="492" y2="214" stroke="#fb7185" stroke-width="3.0" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+  <rect x="472" y="262" width="40" height="20" rx="10" fill="#121c33" stroke="#9f1239"/><text class="ins mono" x="492" y="276" text-anchor="middle" style="fill:#fb7185">smc</text>
+  <line x1="422" y1="384" x2="492" y2="384" stroke="#fb7185" stroke-width="2.2" stroke-dasharray="5 4"/>
+  <line x1="422" y1="384" x2="452" y2="384" stroke="#e5edf7" stroke-width="0.0"/>
+
+  <!-- svc and hvc inside the normal column -->
+  <line x1="660" y1="448" x2="660" y2="434" stroke="#e5edf7" stroke-width="3.0" marker-end="url(#a)"/>
+  <text class="ins mono" x="670" y="446">svc</text><text class="sm" x="700" y="446">system call</text>
+  <line x1="660" y1="338" x2="660" y2="324" stroke="#e5edf7" stroke-width="3.0" marker-end="url(#a)"/>
+  <text class="ins mono" x="670" y="336">hvc</text><text class="sm" x="700" y="336">hypervisor call</text>
+
+  <!-- instruction legend -->
+  <rect x="30" y="566" width="900" height="124" rx="12" fill="#0f192d" stroke="#26344f"/>
+  <text class="col" x="48" y="592" style="fill:#cbd5e1">THE ONLY WAYS TO CHANGE LEVEL</text>
+  <text class="ins mono" x="48" y="620">svc</text><text class="exp" x="96" y="620">app → kernel (open, read, ioctl …). Linux handles it at EL1.</text>
+  <text class="ins mono" x="48" y="644">hvc</text><text class="exp" x="96" y="644">kernel → EL2 (KVM). Not used by this image beyond the boot stub.</text>
+  <text class="ins mono" x="48" y="668" style="fill:#fb7185">smc</text><text class="exp" x="96" y="668">kernel → EL3 (BL31): a deliberate, synchronous trap. Function ID in x0, arguments in x1–x7.</text>
+  <text class="ins mono" x="520" y="620">eret</text><text class="exp" x="570" y="620">return to a lower level, in the world BL31</text>
+  <text class="exp" x="570" y="636">chose: S-EL1 (OP-TEE) or EL1/EL2 (Linux).</text>
+  <text class="exp" x="520" y="654">Apps (EL0) can never execute smc themselves.</text>
+
+  <!-- evidence panel -->
+  <rect x="960" y="120" width="410" height="570" rx="12" fill="#060b16"/>
+  <text class="col" x="980" y="148" style="fill:#94a3b8">PROOF FROM THIS BOARD'S BOOT LOG</text>
+  <text class="log mono" x="980" y="182" style="fill:#a7f3d0">psci: PSCIv1.1 detected in firmware.</text>
+  <text class="exp" x="980" y="202" style="fill:#cbd5e1">Linux asked BL31 (by smc) which PSCI</text>
+  <text class="exp" x="980" y="218" style="fill:#cbd5e1">version it implements → BL31 is there.</text>
+
+  <text class="log mono" x="980" y="256" style="fill:#a7f3d0">smp: Brought up 1 node, 4 CPUs</text>
+  <text class="exp" x="980" y="276" style="fill:#cbd5e1">CPUs 1–3 were started by smc PSCI</text>
+  <text class="exp" x="980" y="292" style="fill:#cbd5e1">CPU_ON (x0 = 0xC400_0003) calls.</text>
+
+  <text class="log mono" x="980" y="330" style="fill:#a7f3d0">CPU: All CPU(s) started at EL2</text>
+  <text class="log mono" x="980" y="348" style="fill:#a7f3d0">kvm [1]: Hyp nVHE mode initialized</text>
+  <text class="exp" x="980" y="368" style="fill:#cbd5e1">BL31 entered U-Boot at EL2, U-Boot kept</text>
+  <text class="exp" x="980" y="384" style="fill:#cbd5e1">EL2 for Linux; the kernel parks a small</text>
+  <text class="exp" x="980" y="400" style="fill:#cbd5e1">KVM stub there and runs at EL1.</text>
+
+  <text class="log mono" x="980" y="438" style="fill:#fda4af">optee optee: OP-TEE api uid mismatch</text>
+  <text class="exp" x="980" y="458" style="fill:#cbd5e1">U-Boot probed for OP-TEE with an smc;</text>
+  <text class="exp" x="980" y="474" style="fill:#cbd5e1">BL31 has no BL32 to forward to, so the</text>
+  <text class="exp" x="980" y="490" style="fill:#cbd5e1">secure world here is BL31 alone.</text>
+
+  <line x1="980" y1="520" x2="1350" y2="520" stroke="#e5edf7"/>
+  <text class="exp" x="980" y="548" style="fill:#e2e8f0">Read these yourself on the board:</text>
+  <text class="log mono" x="980" y="574" style="fill:#93c5fd">dmesg | grep -iE "psci|EL2|kvm"</text>
+  <text class="log mono" x="980" y="598" style="fill:#93c5fd">cat /sys/firmware/devicetree/base/\</text>
+  <text class="log mono" x="980" y="616" style="fill:#93c5fd">    psci/compatible</text>
+  <text class="exp" x="980" y="650" style="fill:#94a3b8">SMC function IDs follow Arm's SMCCC:</text>
+  <text class="exp" x="980" y="668" style="fill:#94a3b8">0xC4… = PSCI (64-bit), 0xC2… = SiP (NXP).</text>
+<g id="icons"><g transform="translate(888,131) scale(1.25)" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path d="m9 12 2 2 4-4" /></g><g transform="translate(384,352) scale(1)" fill="none" stroke="#fb7185" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></g><g transform="translate(384,462) scale(1)" fill="none" stroke="#fb7185" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></g><g transform="translate(794,243) scale(1)" fill="none" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /> <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /> <path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /> <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" /></g><g transform="translate(794,352) scale(1)" fill="#ffffff"><path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.063.198.114.333l.003.003c.391.778 1.113 1.132 1.884 1.071.771-.06 1.592-.536 2.257-1.306.631-.765 1.683-1.084 2.378-1.503.348-.199.629-.469.649-.853.023-.4-.2-.811-.714-1.376v-.097l-.003-.003c-.17-.2-.25-.535-.338-.926-.085-.401-.182-.786-.492-1.046h-.003c-.059-.054-.123-.067-.188-.135a.357.357 0 00-.19-.064c.431-1.278.264-2.55-.173-3.694-.533-1.41-1.465-2.638-2.175-3.483-.796-1.005-1.576-1.957-1.56-3.368.026-2.152.236-6.133-3.544-6.139zm.529 3.405h.013c.213 0 .396.062.584.198.19.135.33.332.438.533.105.259.158.459.166.724 0-.02.006-.04.006-.06v.105a.086.086 0 01-.004-.021l-.004-.024a1.807 1.807 0 01-.15.706.953.953 0 01-.213.335.71.71 0 00-.088-.042c-.104-.045-.198-.064-.284-.133a1.312 1.312 0 00-.22-.066c.05-.06.146-.133.183-.198.053-.128.082-.264.088-.402v-.02a1.21 1.21 0 00-.061-.4c-.045-.134-.101-.2-.183-.333-.084-.066-.167-.132-.267-.132h-.016c-.093 0-.176.03-.262.132a.8.8 0 00-.205.334 1.18 1.18 0 00-.09.4v.019c.002.089.008.179.02.267-.193-.067-.438-.135-.607-.202a1.635 1.635 0 01-.018-.2v-.02a1.772 1.772 0 01.15-.768c.082-.22.232-.406.43-.533a.985.985 0 01.594-.2zm-2.962.059h.036c.142 0 .27.048.399.135.146.129.264.288.344.465.09.199.14.4.153.667v.004c.007.134.006.2-.002.266v.08c-.03.007-.056.018-.083.024-.152.055-.274.135-.393.2.012-.09.013-.18.003-.267v-.015c-.012-.133-.04-.2-.082-.333a.613.613 0 00-.166-.267.248.248 0 00-.183-.064h-.021c-.071.006-.13.04-.186.132a.552.552 0 00-.12.27.944.944 0 00-.023.33v.015c.012.135.037.2.08.334.046.134.098.2.166.268.01.009.02.018.034.024-.07.057-.117.07-.176.136a.304.304 0 01-.131.068 2.62 2.62 0 01-.275-.402 1.772 1.772 0 01-.155-.667 1.759 1.759 0 01.08-.668 1.43 1.43 0 01.283-.535c.128-.133.26-.2.418-.2zm1.37 1.706c.332 0 .733.065 1.216.399.293.2.523.269 1.052.468h.003c.255.136.405.266.478.399v-.131a.571.571 0 01.016.47c-.123.31-.516.643-1.063.842v.002c-.268.135-.501.333-.775.465-.276.135-.588.292-1.012.267a1.139 1.139 0 01-.448-.067 3.566 3.566 0 01-.322-.198c-.195-.135-.363-.332-.612-.465v-.005h-.005c-.4-.246-.616-.512-.686-.71-.07-.268-.005-.47.193-.6.224-.135.38-.271.483-.336.104-.074.143-.102.176-.131h.002v-.003c.169-.202.436-.47.839-.601.139-.036.294-.065.466-.065zm2.8 2.142c.358 1.417 1.196 3.475 1.735 4.473.286.534.855 1.659 1.102 3.024.156-.005.33.018.513.064.646-1.671-.546-3.467-1.089-3.966-.22-.2-.232-.335-.123-.335.59.534 1.365 1.572 1.646 2.757.13.535.16 1.104.021 1.67.067.028.135.06.205.067 1.032.534 1.413.938 1.23 1.537v-.043c-.06-.003-.12 0-.18 0h-.016c.151-.467-.182-.825-1.065-1.224-.915-.4-1.646-.336-1.77.465-.008.043-.013.066-.018.135-.068.023-.139.053-.209.064-.43.268-.662.669-.793 1.187-.13.533-.17 1.156-.205 1.869v.003c-.02.334-.17.838-.319 1.35-1.5 1.072-3.58 1.538-5.348.334a2.645 2.645 0 00-.402-.533 1.45 1.45 0 00-.275-.333c.182 0 .338-.03.465-.067a.615.615 0 00.314-.334c.108-.267 0-.697-.345-1.163-.345-.467-.931-.995-1.788-1.521-.63-.4-.986-.87-1.15-1.396-.165-.534-.143-1.085-.015-1.645.245-1.07.873-2.11 1.274-2.763.107-.065.037.135-.408.974-.396.751-1.14 2.497-.122 3.854a8.123 8.123 0 01.647-2.876c.564-1.278 1.743-3.504 1.836-5.268.048.036.217.135.289.202.218.133.38.333.59.465.21.201.477.335.876.335.039.003.075.006.11.006.412 0 .73-.134.997-.268.29-.134.52-.334.74-.4h.005c.467-.135.835-.402 1.044-.7zm2.185 8.958c.037.6.343 1.245.882 1.377.588.134 1.434-.333 1.791-.765l.211-.01c.315-.007.577.01.847.268l.003.003c.208.199.305.53.391.876.085.4.154.78.409 1.066.486.527.645.906.636 1.14l.003-.007v.018l-.003-.012c-.015.262-.185.396-.498.595-.63.401-1.746.712-2.457 1.57-.618.737-1.37 1.14-2.036 1.191-.664.053-1.237-.2-1.574-.898l-.005-.003c-.21-.4-.12-1.025.056-1.69.176-.668.428-1.344.463-1.897.037-.714.076-1.335.195-1.814.12-.465.308-.797.641-.984l.045-.022zm-10.814.049h.01c.053 0 .105.005.157.014.376.055.706.333 1.023.752l.91 1.664.003.003c.243.533.754 1.064 1.189 1.637.434.598.77 1.131.729 1.57v.006c-.057.744-.48 1.148-1.125 1.294-.645.135-1.52.002-2.395-.464-.968-.536-2.118-.469-2.857-.602-.369-.066-.61-.2-.723-.4-.11-.2-.113-.602.123-1.23v-.004l.002-.003c.117-.334.03-.752-.027-1.118-.055-.401-.083-.71.043-.94.16-.334.396-.4.69-.533.294-.135.64-.202.915-.47h.002v-.002c.256-.268.445-.601.668-.838.19-.201.38-.336.663-.336zm7.159-9.074c-.435.201-.945.535-1.488.535-.542 0-.97-.267-1.28-.466-.154-.134-.28-.268-.373-.335-.164-.134-.144-.333-.074-.333.109.016.129.134.199.2.096.066.215.2.36.333.292.2.68.467 1.167.467.485 0 1.053-.267 1.398-.466.195-.135.445-.334.648-.467.156-.136.149-.267.279-.267.128.016.034.134-.147.332a8.097 8.097 0 01-.69.468zm-1.082-1.583V5.64c-.006-.02.013-.042.029-.05.074-.043.18-.027.26.004.063 0 .16.067.15.135-.006.049-.085.066-.135.066-.055 0-.092-.043-.141-.068-.052-.018-.146-.008-.163-.065zm-.551 0c-.02.058-.113.049-.166.066-.047.025-.086.068-.14.068-.05 0-.13-.02-.136-.068-.01-.066.088-.133.15-.133.08-.031.184-.047.259-.005.019.009.036.03.03.05v.02h.003z"/></g><g transform="translate(794,462) scale(1)" fill="none" stroke="#5eead4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 11 2-2-2-2" /> <path d="M11 13h4" /> <rect width="18" height="18" x="3" y="3" rx="2" ry="2" /></g><g transform="translate(1334,132) scale(0.916667)" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12h-5" /> <path d="M15 8h-5" /> <path d="M19 17V5a2 2 0 0 0-2-2H4" /> <path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3" /></g></g><!--/icons--></svg>

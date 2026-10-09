@@ -2,6 +2,10 @@
 
 [Docs](README.md) › **04 · Kernel**
 
+> **In this guide:** building the kernel by hand; how a device tree is
+> composed from layers and why there are 47 of them; how one DT node becomes a
+> working driver; configuration fragments; and what gets installed where.
+
 ```bash
 ./build.sh kernel                 # config + build + install (default)
 ./build.sh kernel build           # just recompile (incremental)
@@ -39,9 +43,11 @@ cp $K/arch/arm64/boot/Image.gz $K/arch/arm64/boot/dts/freescale/imx8mp-var-*.dtb
 
 ## Device trees
 
+![How a device tree is built up in layers](images/dt-layers.svg)
+
 The script builds **every** `imx8mp-var-*.dtb` listed in
 `arch/arm64/boot/dts/freescale/Makefile`, currently 47. U-Boot picks the right
-one at boot (see [03-uboot.md](03-uboot.md#the-u-boot-environment-and-how-the-kernel-is-found)).
+one at boot (see [03-uboot.md](03-uboot.md#the-boot-decision-flow)).
 
 The names follow a pattern:
 
@@ -70,6 +76,11 @@ KERNEL_DTBS="imx8mp-var-dart-sonata.dtb imx8mp-var-dart-1.x-sonata.dtb"
 ```
 
 ### Your own device tree
+
+How any node in that file becomes a running driver, step by step with the
+board's real RTC:
+
+![From one line of device tree to a working driver](images/dt-to-driver.svg)
 
 Put `my-board.dts` (and any `.dtsi` it needs) in `custom/dts/`. The script
 copies it into `arch/arm64/boot/dts/freescale/` and builds

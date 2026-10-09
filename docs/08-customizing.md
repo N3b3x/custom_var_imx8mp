@@ -2,6 +2,12 @@
 
 [Docs](README.md) › **08 · Customizing**
 
+> **In this guide:** where to put each kind of change so it survives rebuilds
+> and updates, with recipes for the common ones: your own carrier board,
+> source patches, kernel options and versions.
+
+![Where your changes go](images/customize-map.svg)
+
 The rule of thumb: **never rely on edits inside `build/src/`**. That tree is
 disposable (`distclean`, `--update`). Put changes in this repository instead,
 in one of these places:
@@ -14,6 +20,10 @@ in one of these places:
 | change source code of U-Boot / TF-A / mkimage / kernel | `patches/{uboot,atf,mkimage,kernel}/NNNN-*.patch` | the matching step, right after checkout |
 
 ## A device tree for your carrier board
+
+You write **layer 3** only. The SoC and SoM layers stay Variscite's:
+
+![How a device tree is built up in layers](images/dt-layers.svg)
 
 1. Start from the closest Variscite file, e.g. DART on Sonata:
 

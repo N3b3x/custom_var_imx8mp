@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" role="img" aria-label="Physical memory map of the 4 GiB board. Top: the whole DDR from 0x4000_0000 to 0x1_3FFF_FFFF as Linux sees it, with the kernel near the start, 256 MiB reserved for the GPU at 0x6000_0000, the DSP reservation near 0x9240_0000, 64 MiB of DMA bounce buffers at 0xD000_0000, the 704 MiB CMA pool up to the 4 GiB boundary, and the Normal zone above it. Bottom: a zoom on the first 64 MiB during booti, where U-Boot was loaded at 0x4020_0000, Image.gz is read to img_addr 0x4200_0000, unzipped to loadaddr 0x4048_0000 and moved to 0x4060_0000, and the device tree is read to fdt_addr 0x4300_0000.">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e5edf7"/></marker>
+    <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#0b3a36"/><line x1="0" y1="0" x2="0" y2="8" stroke="#0f766e" stroke-width="3"/></pattern>
+  </defs>
+  <style>
+    text { font-family: "Segoe UI", "Helvetica Neue", Arial, "DejaVu Sans", sans-serif; fill: #e5edf7; }
+    .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", "DejaVu Sans Mono", monospace; }
+    .t { font-size: 25px; font-weight: 700; }
+    .st { font-size: 14px; }
+    .col { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
+    .lbl { font-size: 12px; font-weight: 700; }
+    .sm { font-size: 11.5px; }
+    .addr { font-size: 10.5px; }
+  </style>
+  <rect width="1400" height="760" rx="18" fill="#0b1220"/>
+  <rect x="0.5" y="0.5" width="1399" height="759" rx="18" fill="none" stroke="#1e2a44"/>
+  <text class="t" x="30" y="44">Where things live in RAM</text>
+  <text class="st" x="30" y="68" style="fill:#9fb0c6">4 GiB LPDDR4 at 0x4000_0000 – 0x1_3FFF_FFFF, drawn to scale. Values from this board's boot log and U-Boot environment.</text>
+
+  <text class="col" x="60" y="110" style="fill:#9fb0c6">WHILE LINUX RUNS · whole DDR, to scale</text>
+
+  <!-- whole DDR bar: x 60..1340 for 4096 MiB -->
+  <rect x="60" y="150" width="1280" height="64" rx="6" fill="#0b3a36" stroke="#2dd4bf"/>
+  <rect x="62" y="152" width="11" height="60" fill="#0f766e"/>
+  <rect x="220" y="150" width="80" height="64" fill="#64748b"/>
+  <rect x="471" y="150" width="10" height="64" fill="#7c3aed"/>
+  <rect x="780" y="150" width="20" height="64" fill="#f59e0b"/>
+  <rect x="800" y="150" width="220" height="64" fill="url(#hatch)" stroke="#2dd4bf"/>
+  <line x1="1020" y1="138" x2="1020" y2="226" stroke="#e5edf7" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <text class="lbl" x="910" y="186" text-anchor="middle" style="fill:#5eead4">CMA · 704 MiB</text>
+  <text class="sm" x="910" y="202" text-anchor="middle" style="fill:#5eead4">GPU/VPU/camera buffers</text>
+  <text class="lbl" x="260" y="186" text-anchor="middle" style="fill:#fff">GPU</text>
+  <text class="sm" x="260" y="202" text-anchor="middle" style="fill:#f1f5f9">256 MiB</text>
+  <text class="lbl" x="1180" y="186" text-anchor="middle" style="fill:#5eead4">ZONE_NORMAL (above 4 GiB)</text>
+  <text class="lbl" x="620" y="186" text-anchor="middle" style="fill:#5eead4">ZONE_DMA · ordinary RAM</text>
+
+  <!-- top address ticks -->
+  <text class="addr mono" x="60" y="140" style="fill:#9fb0c6">0x4000_0000</text>
+  <text class="addr mono" x="220" y="140" style="fill:#9fb0c6">0x6000_0000</text>
+  <text class="addr mono" x="440" y="140" style="fill:#9fb0c6">0x9240_0000</text>
+  <text class="addr mono" x="744" y="140" style="fill:#9fb0c6">0xD000_0000</text>
+  <text class="addr mono" x="1026" y="140" style="fill:#e5edf7">0x1_0000_0000 = 4 GiB</text>
+  <text class="addr mono" x="1340" y="140" text-anchor="end" style="fill:#9fb0c6">0x1_3FFF_FFFF</text>
+
+  <!-- below callouts -->
+  <line x1="67" y1="214" x2="67" y2="250" stroke="#2dd4bf"/><text class="sm" x="72" y="248" style="fill:#5eead4;font-weight:700">kernel @ 0x4060_0000</text><text class="sm" x="72" y="264" style="fill:#9fb0c6">35 MiB code + data</text>
+  <line x1="476" y1="214" x2="476" y2="250" stroke="#a78bfa"/><text class="sm" x="482" y="248" style="fill:#c4b5fd;font-weight:700">DSP · ~31 MiB</text><text class="sm" x="482" y="264" style="fill:#9fb0c6">HiFi4 audio DSP firmware + heap</text>
+  <line x1="790" y1="214" x2="790" y2="250" stroke="#fbbf24"/><text class="sm" x="660" y="282" style="fill:#fbbf24;font-weight:700">SWIOTLB · 64 MiB @ 0xD000_0000</text><text class="sm" x="660" y="298" style="fill:#9fb0c6">bounce buffers for 32-bit DMA devices</text>
+  <text class="sm" x="1026" y="248" style="fill:#e5edf7;font-weight:700">4 GiB boundary</text><text class="sm" x="1026" y="264" style="fill:#9fb0c6">"DMA" zone below, "Normal" above</text>
+
+  <rect x="60" y="318" width="1280" height="34" rx="8" fill="#0f192d" stroke="#26344f"/>
+  <text class="sm" x="76" y="340" style="fill:#cbd5e1"><tspan style="font-weight:700">free -m</tspan> shows 3649 MiB total: 4096 − GPU 256 − DSP 31 − kernel, reserved pages, page tables. CMA counts as free until a driver allocates from it.</text>
+
+  <!-- zoom trapezoid -->
+  <rect x="62" y="152" width="20" height="60" fill="none" stroke="#e5edf7" stroke-width="1.5"/>
+
+  <text class="col" x="60" y="392" style="fill:#9fb0c6">DURING booti · zoom on the first 64 MiB (0x4000_0000 – 0x4400_0000), to scale</text>
+
+  <!-- zoom: x 60..1340 for 64 MiB = 20 px/MiB -->
+  <rect x="60" y="404" width="1280" height="242" rx="6" fill="#0f192d" stroke="#33415c"/>
+  <!-- grid ticks every 8 MiB -->
+  <g stroke="#1d2a45">
+    <line x1="220" y1="404" x2="220" y2="646"/><line x1="380" y1="404" x2="380" y2="646"/><line x1="540" y1="404" x2="540" y2="646"/>
+    <line x1="700" y1="404" x2="700" y2="646"/><line x1="860" y1="404" x2="860" y2="646"/><line x1="1020" y1="404" x2="1020" y2="646"/><line x1="1180" y1="404" x2="1180" y2="646"/>
+  </g>
+
+  <!-- row 1: SPL put U-Boot here -->
+  <text class="sm" x="70" y="426" style="fill:#8a9bb3">① SPL</text>
+  <rect x="100" y="434" width="22" height="30" rx="3" fill="#2563eb"/>
+  <text class="sm" x="130" y="454" style="fill:#93c5fd"><tspan class="mono" style="font-weight:700">0x4020_0000</tspan>  U-Boot proper (1.07 MiB) — relocates itself to the top of RAM, freeing this area</text>
+
+  <!-- row 2: U-Boot loads Image.gz and DTB -->
+  <text class="sm" x="70" y="490" style="fill:#8a9bb3">② U-Boot  load mmc 1:1 …</text>
+  <rect x="700" y="498" width="298" height="30" rx="3" fill="#0ea5e9"/>
+  <text class="lbl" x="849" y="518" text-anchor="middle" style="fill:#fff">Image.gz · 14.9 MiB</text>
+  <rect x="1020" y="498" width="6" height="30" fill="#6d28d9"/>
+  <text class="sm mono" x="700" y="546" style="fill:#7dd3fc">img_addr = 0x4200_0000</text>
+  <text class="sm mono" x="1032" y="518" style="fill:#c4b5fd;font-weight:700">fdt_addr = 0x4300_0000</text>
+  <text class="sm" x="1032" y="534" style="fill:#c4b5fd">imx8mp-var-som-1.x-symphony.dtb · 78 KiB</text>
+
+  <!-- row 3: unzip + booti move -->
+  <text class="sm" x="70" y="576" style="fill:#8a9bb3">③ unzip → booti</text>
+  <rect x="150" y="584" width="30" height="30" rx="3" fill="#0f766e" stroke="#2dd4bf" stroke-dasharray="3 2"/>
+  <rect x="180" y="584" width="684" height="30" rx="3" fill="#0f766e"/>
+  <text class="lbl" x="522" y="604" text-anchor="middle" style="fill:#fff">Linux kernel Image · 34.2 MiB · runs here (0x4060_0000 – 0x4290_0000)</text>
+  <path d="M165,584 C165,566 190,566 196,582" fill="none" stroke="#e5edf7" stroke-width="2.6" marker-end="url(#a)"/>
+  <text class="sm mono" x="150" y="632" style="fill:#5eead4">loadaddr = 0x4048_0000 → moved to 0x4060_0000 (2 MiB aligned)</text>
+  <path d="M760,530 C760,560 600,560 560,582" fill="none" stroke="#e5edf7" stroke-width="2.6" stroke-dasharray="4 3" marker-end="url(#a)"/>
+  <text class="sm" x="740" y="574" style="fill:#9fb0c6">unzip</text>
+
+  <!-- zoom axis -->
+  <text class="addr mono" x="60" y="664" style="fill:#9fb0c6">0x4000_0000</text>
+  <text class="addr mono" x="380" y="664" text-anchor="middle" style="fill:#9fb0c6">+16 MiB</text>
+  <text class="addr mono" x="700" y="664" text-anchor="middle" style="fill:#9fb0c6">+32 MiB</text>
+  <text class="addr mono" x="1020" y="664" text-anchor="middle" style="fill:#9fb0c6">+48 MiB</text>
+  <text class="addr mono" x="1340" y="664" text-anchor="end" style="fill:#9fb0c6">0x4400_0000</text>
+
+  <text class="sm" x="60" y="700" style="fill:#9fb0c6">Not in DDR at all: the SPL and TF-A BL31 live in on-chip RAM (0x0092_0000 / 0x0097_0000). An OP-TEE build would also reserve 0x5600_0000 – 0x57FF_FFFF.</text>
+  <text class="sm mono" x="60" y="724" style="fill:#8a9bb3">Check on the board:  cat /proc/iomem  ·  dmesg | grep -E "reserved mem|cma|IO TLB"  ·  grep -i cma /proc/meminfo  ·  U-Boot: printenv img_addr loadaddr fdt_addr</text>
+<g id="icons"><g transform="translate(1334,98) scale(0.916667)" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12v-2" /> <path d="M12 18v-2" /> <path d="M16 12v-2" /> <path d="M16 18v-2" /> <path d="M2 11h1.5" /> <path d="M20 18v-2" /> <path d="M20.5 11H22" /> <path d="M4 18v-2" /> <path d="M8 12v-2" /> <path d="M8 18v-2" /> <rect x="2" y="6" width="20" height="10" rx="2" /></g></g><!--/icons--></svg>

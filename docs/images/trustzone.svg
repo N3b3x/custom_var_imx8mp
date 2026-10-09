@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="780" viewBox="0 0 1400 780" role="img" aria-label="How TrustZone is enforced on the i.MX 8M Plus: the CPU's NS bit is carried on every bus transaction as AxPROT[1]; the TZASC in front of DDR and the CSU in front of peripherals compare it with their configuration and allow or block the access. In this build the SPL enables the TZASC with a single region covering all DDR for both worlds, and BL31 opens all peripherals, so nothing in DDR is secure-only; with OP-TEE a second region at 0x56000000 becomes secure-only and a non-secure access to it is blocked.">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e5edf7"/></marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fb7185"/></marker>
+  </defs>
+  <style>
+    text { font-family: "Segoe UI", "Helvetica Neue", Arial, "DejaVu Sans", sans-serif; fill: #e5edf7; }
+    .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", "DejaVu Sans Mono", monospace; }
+    .t { font-size: 25px; font-weight: 700; }
+    .st { font-size: 14px; }
+    .col { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
+    .nm { font-size: 15px; font-weight: 700; }
+    .sm { font-size: 12px; }
+    .xs { font-size: 11px; }
+    .lbl { font-size: 11.5px; font-weight: 700; }
+    .big { font-size: 22px; font-weight: 800; }
+  </style>
+  <rect width="1400" height="780" rx="18" fill="#0b1220"/>
+  <rect x="0.5" y="0.5" width="1399" height="779" rx="18" fill="none" stroke="#1e2a44"/>
+  <text class="t" x="30" y="44">How TrustZone is enforced, and what it protects in this build</text>
+  <text class="st" x="30" y="68" style="fill:#9fb0c6">Security is decided by bus hardware on every single access, not by Linux. Firmware only programs the rules.</text>
+
+  <!-- ===== Left: enforcement path ===== -->
+  <text class="col" x="30" y="106" style="fill:#9fb0c6">THE MECHANISM</text>
+
+  <rect x="30" y="118" width="600" height="96" rx="12" fill="#060b16"/>
+  <text class="nm" x="48" y="146" style="fill:#fff">Cortex-A53 core</text>
+  <text class="sm" x="48" y="168" style="fill:#cbd5e1">Its security state is one bit, SCR_EL3.NS: 0 = secure, 1 = non-secure.</text>
+  <text class="sm" x="48" y="186" style="fill:#cbd5e1">Only EL3 (BL31) can write it, which is why only BL31 can switch worlds.</text>
+  <rect x="470" y="130" width="146" height="26" rx="13" fill="#14532d"/><text class="lbl mono" x="543" y="148" text-anchor="middle" style="fill:#bbf7d0">Linux: NS = 1</text>
+
+  <line x1="330" y1="216" x2="330" y2="250" stroke="#e5edf7" stroke-width="3.0" marker-end="url(#a)"/>
+  <rect x="350" y="222" width="270" height="22" rx="11" fill="#121c33" stroke="#33415c"/><text class="lbl" x="485" y="237" text-anchor="middle">every read/write carries AxPROT[1] = NS</text>
+
+  <rect x="30" y="254" width="600" height="56" rx="12" fill="#1d2a45"/>
+  <text class="nm" x="48" y="278">AXI interconnect (NoC)</text>
+  <text class="sm" x="48" y="298" style="fill:#9fb0c6">routes the access, attribute attached, to the right checker</text>
+
+  <line x1="150" y1="312" x2="150" y2="346" stroke="#e5edf7" stroke-width="3.0" marker-end="url(#a)"/>
+  <line x1="510" y1="312" x2="510" y2="346" stroke="#e5edf7" stroke-width="3.0" marker-end="url(#a)"/>
+
+  <rect x="30" y="350" width="290" height="132" rx="12" fill="#2a1b05" stroke="#f59e0b" stroke-width="1.5"/>
+  <text class="nm" x="48" y="376" style="fill:#fcd34d">TZASC (TZC-380)</text>
+  <text class="sm" x="48" y="396">in front of DDR. Up to 16 regions,</text>
+  <text class="sm" x="48" y="413">each with secure / non-secure</text>
+  <text class="sm" x="48" y="430">read/write permission.</text>
+  <text class="sm" x="48" y="456" style="fill:#fb7185;font-weight:700">denied → bus error, CPU aborts</text>
+
+  <rect x="340" y="350" width="290" height="132" rx="12" fill="#2a1b05" stroke="#f59e0b" stroke-width="1.5"/>
+  <text class="nm" x="358" y="376" style="fill:#fcd34d">CSU + RDC</text>
+  <text class="sm" x="358" y="396">CSU: secure/non-secure access per</text>
+  <text class="sm" x="358" y="413">peripheral (CAAM, SNVS, UART …).</text>
+  <text class="sm" x="358" y="430">RDC: which bus master (A53, M7,</text>
+  <text class="sm" x="358" y="447">DMA) may touch which peripheral.</text>
+
+  <line x1="175" y1="484" x2="175" y2="514" stroke="#e5edf7" stroke-width="3.0" marker-end="url(#a)"/>
+  <line x1="485" y1="484" x2="485" y2="514" stroke="#e5edf7" stroke-width="3.0" marker-end="url(#a)"/>
+  <rect x="30" y="518" width="290" height="42" rx="10" fill="#0b3a36"/><text class="nm" x="175" y="545" text-anchor="middle" style="fill:#5eead4">DDR (LPDDR4)</text>
+  <rect x="340" y="518" width="290" height="42" rx="10" fill="#0b3a36"/><text class="nm" x="485" y="545" text-anchor="middle" style="fill:#5eead4">Peripherals</text>
+
+  <rect x="30" y="580" width="600" height="114" rx="12" fill="#0f192d" stroke="#26344f"/>
+  <text class="col" x="48" y="604" style="fill:#cbd5e1">WHO PROGRAMS THE RULES IN THIS BUILD</text>
+  <text class="sm mono" x="48" y="628">SPL   enable_tzc380()</text><text class="sm" x="248" y="628" style="fill:#9fb0c6">TZASC on + locked, region 0 = all DDR, S+NS</text>
+  <text class="sm mono" x="48" y="650">BL31  bl31_tzc380_setup()</text><text class="sm" x="248" y="650" style="fill:#9fb0c6">programs the same open region 0 again</text>
+  <text class="sm mono" x="48" y="672">BL31  CSU = 0x00ff00ff ×64</text><text class="sm" x="248" y="672" style="fill:#9fb0c6">every peripheral reachable from both worlds</text>
+
+  <!-- ===== Right: comparison ===== -->
+  <text class="col" x="680" y="106" style="fill:#9fb0c6">THE RULES FOR DDR · WHAT CHANGES WITH OP-TEE</text>
+
+  <!-- This build -->
+  <rect x="680" y="118" width="330" height="576" rx="14" fill="#052620" stroke="#059669"/>
+  <text class="nm" x="698" y="146" style="fill:#6ee7b7">This build (BL31 only)</text>
+  <text class="xs" x="698" y="164" style="fill:#9fb0c6">TZASC: 1 region</text>
+  <rect x="740" y="186" width="120" height="440" rx="8" fill="#065f46" stroke="#34d399"/>
+  <text class="xs mono" x="736" y="196" text-anchor="end" style="fill:#9fb0c6">0x4000_0000</text>
+  <text class="xs mono" x="736" y="626" text-anchor="end" style="fill:#9fb0c6">0x1_3FFF_FFFF</text>
+  <text class="lbl" x="800" y="392" text-anchor="middle" style="fill:#6ee7b7">region 0</text>
+  <text class="xs" x="800" y="410" text-anchor="middle" style="fill:#6ee7b7">secure: RW</text>
+  <text class="xs" x="800" y="426" text-anchor="middle" style="fill:#6ee7b7">non-secure: RW</text>
+  <line x1="958" y1="300" x2="866" y2="300" stroke="#34d399" stroke-width="3.0" marker-end="url(#ag)"/>
+  <text class="lbl" x="896" y="292" style="fill:#6ee7b7">Linux (NS)</text><text class="big" x="984" y="308" text-anchor="middle" style="fill:#6ee7b7">✓</text>
+  <line x1="958" y1="500" x2="866" y2="500" stroke="#34d399" stroke-width="3.0" marker-end="url(#ag)"/>
+  <text class="lbl" x="896" y="492" style="fill:#6ee7b7">any address</text><text class="big" x="984" y="508" text-anchor="middle" style="fill:#6ee7b7">✓</text>
+  <text class="xs" x="698" y="652" style="fill:#6ee7b7">Nothing in DDR is secure-only. The secure</text>
+  <text class="xs" x="698" y="668" style="fill:#6ee7b7">world is just BL31, living in on-chip RAM.</text>
+
+  <!-- With OP-TEE -->
+  <rect x="1040" y="118" width="330" height="576" rx="14" fill="#251020" stroke="#9f1239"/>
+  <text class="nm" x="1058" y="146" style="fill:#fda4af">With OP-TEE (optional)</text>
+  <text class="xs" x="1058" y="164" style="fill:#9fb0c6">TZASC: region 0 + a secure-only region</text>
+  <rect x="1100" y="186" width="120" height="440" rx="8" fill="#065f46" stroke="#34d399"/>
+  <rect x="1100" y="300" width="120" height="70" fill="#be123c" stroke="#fb7185"/>
+  <text class="xs mono" x="1096" y="196" text-anchor="end" style="fill:#9fb0c6">0x4000_0000</text>
+  <text class="xs mono" x="1096" y="306" text-anchor="end" style="fill:#fda4af">0x5600_0000</text>
+  <text class="xs mono" x="1096" y="626" text-anchor="end" style="fill:#9fb0c6">0x1_3FFF_FFFF</text>
+  <text class="lbl" x="1160" y="326" text-anchor="middle" style="fill:#fff">OP-TEE</text>
+  <text class="xs" x="1160" y="343" text-anchor="middle" style="fill:#ffe4e6">secure: RW</text>
+  <text class="xs" x="1160" y="359" text-anchor="middle" style="fill:#ffe4e6">non-secure: none</text>
+  <text class="lbl" x="1160" y="480" text-anchor="middle" style="fill:#6ee7b7">region 0 · S+NS RW</text>
+  <line x1="1316" y1="335" x2="1226" y2="335" stroke="#fb7185" stroke-width="3.0" stroke-dasharray="6 4" marker-end="url(#ar)"/>
+  <text class="lbl" x="1240" y="326" style="fill:#fb7185">Linux (NS)</text><text class="big" x="1344" y="344" text-anchor="middle" style="fill:#fb7185">✗</text>
+  <text class="xs" x="1236" y="356" style="fill:#fb7185">blocked by TZASC</text>
+  <line x1="1316" y1="500" x2="1226" y2="500" stroke="#34d399" stroke-width="3.0" marker-end="url(#ag)"/>
+  <text class="lbl" x="1240" y="492" style="fill:#6ee7b7">Linux (NS)</text><text class="big" x="1344" y="508" text-anchor="middle" style="fill:#6ee7b7">✓</text>
+  <text class="xs" x="1058" y="652" style="fill:#fda4af">Even root, or a compromised kernel, cannot</text>
+  <text class="xs" x="1058" y="668" style="fill:#fda4af">read OP-TEE's memory: the bus refuses it.</text>
+
+  <text class="sm" x="30" y="728" style="fill:#9fb0c6">TrustZone is a mechanism, not a guarantee: it protects exactly what firmware marks secure. Adding OP-TEE (plus HAB secure boot, so nobody can swap</text>
+  <text class="sm" x="30" y="748" style="fill:#9fb0c6">the firmware) is what turns this into protected key storage. Sources: Variscite spl.c enable_tzc380(), imx-atf imx8mp_bl31_setup.c.</text>
+<g id="icons"><g transform="translate(432,130) scale(1.08333)" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v2" /> <path d="M12 2v2" /> <path d="M17 20v2" /> <path d="M17 2v2" /> <path d="M2 12h2" /> <path d="M2 17h2" /> <path d="M2 7h2" /> <path d="M20 12h2" /> <path d="M20 17h2" /> <path d="M20 7h2" /> <path d="M7 20v2" /> <path d="M7 2v2" /> <rect x="4" y="4" width="16" height="16" rx="2" /> <rect x="8" y="8" width="8" height="8" rx="1" /></g><g transform="translate(594,266) scale(1)" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="16" y="16" width="6" height="6" rx="1" /> <rect x="2" y="16" width="6" height="6" rx="1" /> <rect x="9" y="2" width="6" height="6" rx="1" /> <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3" /> <path d="M12 12V8" /></g><g transform="translate(286,360) scale(1)" fill="none" stroke="#fcd34d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></g><g transform="translate(596,360) scale(1)" fill="none" stroke="#fcd34d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></g><g transform="translate(54,529) scale(0.833333)" fill="none" stroke="#5eead4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12v-2" /> <path d="M12 18v-2" /> <path d="M16 12v-2" /> <path d="M16 18v-2" /> <path d="M2 11h1.5" /> <path d="M20 18v-2" /> <path d="M20.5 11H22" /> <path d="M4 18v-2" /> <path d="M8 12v-2" /> <path d="M8 18v-2" /> <rect x="2" y="6" width="20" height="10" rx="2" /></g><g transform="translate(364,529) scale(0.833333)" fill="none" stroke="#5eead4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="7" r="1" /> <circle cx="4" cy="20" r="1" /> <path d="M4.7 19.3 19 5" /> <path d="m21 3-3 1 2 2Z" /> <path d="M9.26 7.68 5 12l2 5" /> <path d="m10 14 5 2 3.5-3.5" /> <path d="m18 12 1-1 1 1-1 1Z" /></g><g transform="translate(972,128) scale(1)" fill="none" stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path d="M7 11V7a5 5 0 0 1 9.9-1" /></g><g transform="translate(1332,128) scale(1)" fill="none" stroke="#fb7185" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></g></g><!--/icons--></svg>

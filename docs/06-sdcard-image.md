@@ -2,6 +2,11 @@
 
 [Docs](README.md) › **06 · SD card image**
 
+> **In this guide:** how the three build outputs become one byte-exact disk
+> image without root, why each trick is needed, and how to inspect the result.
+
+![What ./build.sh all does](images/build-pipeline.svg)
+
 ```bash
 ./build.sh image
 ```
@@ -68,6 +73,11 @@ blobs). These are loaded by the audio/DMA drivers, as in Variscite's Yocto
 images.
 
 ## Inspecting an image without flashing it
+
+Once it's on a card, the same storage has three names depending on who's
+looking:
+
+![Storage across the layers](images/storage-map.svg)
 
 ```bash
 sfdisk -l build/deploy/sdcard.img                 # partition table

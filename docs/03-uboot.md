@@ -2,6 +2,11 @@
 
 [Docs](README.md) › **03 · U-Boot**
 
+> **In this guide:** the four ingredients of the boot container (DDR firmware,
+> TF-A, U-Boot, imx-mkimage), built by hand one command at a time; what ends up
+> inside `imx-boot.bin`; how U-Boot decides what to boot; and where its
+> variables come from. Background: [01 · Boot flow](01-boot-flow.md).
+
 ```bash
 ./build.sh uboot              # all four steps → build/deploy/imx-boot.bin
 ./build.sh uboot atf          # or one step at a time: firmware | atf | uboot | mkimage
@@ -114,14 +119,18 @@ What `flash_evk` does (see `iMX8M/soc.mak`):
 
 1. Pads `u-boot-spl.bin` and appends the four DDR blobs → `u-boot-spl-ddr.bin`.
 2. `mkimage_fit_atf.sh` writes `u-boot.its`, a FIT description holding
-   U-Boot, BL31 (load address 0x970000) and one configuration per DTB.
+   U-Boot, BL31 (load address `0x970000`) and one configuration per DTB.
 3. `mkimage_uboot -f u-boot.its u-boot.itb` builds the FIT.
 4. `mkimage_imx8` (compiled from `mkimage_imx8.c` on the fly) adds the
-   i.MX8M IVT/boot-data headers the Boot ROM understands, and concatenates
+   IVT/boot-data headers the Boot ROM understands, and concatenates the
    SPL-ddr and the FIT into `flash.bin`.
 
-Its output ends with an "IVT HEADER" and "OFFSET dump", which is normal.
-`csf_off`/`sld_csf_off` are where HAB signatures would go for secure boot.
+The result, and who unpacks which part at boot:
+
+![Inside imx-boot.bin](images/imx-boot-anatomy.svg)
+
+The output ends with an "IVT HEADER" and "OFFSET dump", which is normal.
+`csf_off`/`sld_csf_off` are where HAB secure-boot signatures would go.
 
 ## Writing just the bootloader
 
@@ -134,49 +143,45 @@ sudo dd if=build/deploy/imx-boot.bin of=/dev/sdX bs=1K seek=32 conv=fsync
 This leaves the partition table and partition 1 untouched (they start at
 8 MiB). Only the 32 KiB to ~1.8 MiB region is rewritten.
 
-## The U-Boot environment, and how the kernel is found
+## The boot decision flow
 
-Read `build/deploy/u-boot-initial-env`. The important variables are:
+![How U-Boot finds and starts Linux](images/uboot-bootcmd.svg)
 
-```
-bootcmd=run bsp_bootcmd
-bootdir=/boot
-image=Image.gz
-mmcpart=1
-console=ttymxc0,115200
-loadimage=load mmc ${mmcdev}:${mmcpart} ${img_addr} ${bootdir}/${image}; unzip ${img_addr} ${loadaddr}
-findfdt=...  sets fdt_file=<module><suffix>-<carrier>.dtb
-mmcargs=setenv bootargs ... console=${console} root=/dev/mmcblk${mmcblk}p${mmcpart} rootwait rw ...
-```
+`bootcmd=run bsp_bootcmd`, and everything after that is a small script in the
+environment. Read all of it in `build/deploy/u-boot-initial-env`. The
+variables it relies on:
 
-So the boot sequence is:
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `bootdir` · `image` | `/boot` · `Image.gz` | where the kernel is on partition `mmcpart=1` |
+| `img_addr` · `loadaddr` · `fdt_addr` | `0x4200_0000` · `0x4048_0000` · `0x4300_0000` | RAM scratch addresses ([memory map](images/memory-map.svg)) |
+| `console` | `ttymxc0` (DART), set to `ttymxc1` on SOM/SMARC by C code | the kernel console |
+| `fdt_file` | `undefined` → computed by `findfdt` | which DTB to load; **set it to skip detection** |
+| `kernelargs` | empty | appended to the kernel command line by `optargs` |
+| `carrier_name` | `undefined` → sonata / symphony / echo | override for custom carriers |
 
-1. `mmc dev ${mmcdev}`: the device it booted from (1 = SD, 2 = eMMC).
-2. If `/boot/boot.scr` exists, run it (full control, see below).
-3. Otherwise, if `/boot/uEnv.txt` exists, import variables from it.
-4. Load `/boot/Image.gz` and decompress it (`unzip`). The i.MX8M can't boot a compressed `Image` directly.
-5. `findfdt` builds the DTB name from what the SPL detected:
-   - module: `imx8mp-var-dart` / `imx8mp-var-som` / `imx8mp-var-smarc`
-   - suffix: `-1.x` for SOM revision < 2.0, `-wbe` for WBE modules, else none
-   - carrier: `sonata` / `symphony` / `echo`, or `${carrier_name}` if set
-   - e.g. `imx8mp-var-dart-sonata.dtb`
-6. Load `/boot/${fdt_file}`, set `bootargs`, then `booti`.
+The C code behind `board_name`/`console` and the full `findfdt` script are
+walked through in [15 · Source tour](15-source-tour.md#6-u-boot-board_late_init-who-am-i).
+
+## Where the variables come from
+
+![Where U-Boot's variables come from](images/uboot-env.svg)
 
 ### Overriding things without rebuilding: `/boot/uEnv.txt`
 
-Put `name=value` lines in `/boot/uEnv.txt` on the card's root partition:
+Put `name=value` lines in `/boot/uEnv.txt` on the card's root partition
+(lines starting with `#` are comments):
 
-```
+```text
 # use a camera variant of the device tree
 fdt_file=imx8mp-var-dart-sonata-basler-isp0.dtb
 # add kernel command-line arguments
 kernelargs=loglevel=7 systemd.log_level=debug
 ```
 
-`kernelargs` is appended by `optargs`. You can also stop autoboot (press any
-key on the serial console) and use `printenv`, `setenv`, `saveenv`. `saveenv`
-writes to 7 MiB on the same card. To return to the defaults, run
-`env default -a; saveenv`.
+At the prompt instead (stop autoboot with any key): `printenv`, `setenv`,
+`run`, `boot`. `saveenv` makes changes permanent at 7 MiB on the card, and
+`env default -a; saveenv` returns to the defaults.
 
 ---
 

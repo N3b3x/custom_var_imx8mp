@@ -16,11 +16,14 @@ i.MX 8M Plus BSP in this repository. New here? Start with the
 
 ### "I want to understand how it works"
 
-1. [01 · Boot flow](01-boot-flow.md): what happens between power-on and the login prompt
-2. [03 · U-Boot](03-uboot.md): the boot container, built by hand
-3. [04 · Kernel](04-kernel.md): kernel, device trees, modules
-4. [05 · Root filesystem](05-rootfs.md): what the OS around the kernel is made of
-5. [06 · SD card image](06-sdcard-image.md): how the parts become one flashable file
+1. [14 · Acronyms](14-acronyms.md): SoC, SPL, BL31, TZASC … what they stand for and why they exist
+2. [01 · Boot flow](01-boot-flow.md): what happens between power-on and the login prompt
+3. [13 · Secure world](13-secure-world.md): TF-A, OP-TEE, exception levels, `smc`, TrustZone
+4. [03 · U-Boot](03-uboot.md): the boot container, built by hand
+5. [04 · Kernel](04-kernel.md): kernel, device trees, how drivers bind
+6. [05 · Root filesystem](05-rootfs.md): what the OS around the kernel is made of
+7. [06 · SD card image](06-sdcard-image.md): how the parts become one flashable file
+8. [15 · Source tour](15-source-tour.md): read the real code behind each step
 
 ### "I'm building a product on it"
 
@@ -44,30 +47,15 @@ i.MX 8M Plus BSP in this repository. New here? Start with the
 | 10 | [Versions](10-versions.md) | where versions come from, ready-made 6.12 / 6.6 sets, upgrading |
 | 11 | [Using the board](11-using-the-board.md) | processes, resources, logs, drivers, buses, network, every command explained |
 | 12 | [Board tour](12-board-tour.md) | a live VAR-SOM-MX8M-PLUS explained: CPU, thermal, I2C map, display, what isn't working and why |
+| 13 | [Secure world](13-secure-world.md) | ATF/TF-A, BL31/32/33, OP-TEE, exception levels, `smc`, TrustZone, what this build protects |
+| 14 | [Acronyms](14-acronyms.md) | every acronym: what it stands for, what it is on this board, why it exists |
+| 15 | [Source tour](15-source-tour.md) | the files that run at boot, with real code excerpts |
+
+## Diagrams
+
+All diagrams, with what each shows: [images/README.md](images/README.md).
 
 ## Glossary
 
-| Term | Meaning |
-| --- | --- |
-| **SoC** | System on Chip: the NXP i.MX 8M Plus (4× Cortex-A53, Cortex-M7, GPU, NPU, VPU...) |
-| **SoM / module** | the small Variscite board carrying SoC, RAM, eMMC and PMIC: DART-MX8M-PLUS, VAR-SOM-MX8M-PLUS, VAR-SMARC-MX8M-PLUS |
-| **Carrier board** | the larger board the module plugs into, with connectors: Sonata, Symphony, Echo, or yours |
-| **BSP** | Board Support Package: bootloader + kernel + firmware + config for a board |
-| **Boot ROM** | code burned into the SoC. It reads the boot switch and loads the first image from 32 KiB on SD/eMMC |
-| **SPL** | U-Boot's Secondary Program Loader: a tiny first stage that runs from on-chip RAM and initializes DDR |
-| **DDR training** | calibrating the LPDDR4 memory timing at each power-up, done with NXP firmware blobs |
-| **TF-A / ATF / BL31** | Trusted Firmware-A: the secure monitor running at EL3. Linux uses it (PSCI) to start CPUs, reboot and suspend |
-| **U-Boot** | the bootloader: finds and starts the kernel, has an interactive prompt |
-| **imx-boot / flash.bin** | the single file holding SPL + DDR firmware + TF-A + U-Boot |
-| **FIT image** | U-Boot's container format (`u-boot.itb`) for several binaries + device trees |
-| **Device tree (DTS/DTB)** | text (`.dts`) / compiled (`.dtb`) description of the board's hardware, given to the kernel |
-| **Overlay (DTBO)** | a device-tree patch merged onto a base DTB, e.g. the `-1.x` or `-wbe` variants |
-| **defconfig** | a saved kernel/U-Boot configuration (`imx8_var_defconfig`) |
-| **Cross-compiler** | runs on your PC (x86-64) but produces code for the board (aarch64) |
-| **Root filesystem (rootfs)** | everything in `/` besides the kernel: init, shell, libraries, programs |
-| **BusyBox** | one small binary that provides ~300 Unix commands, used by Alpine |
-| **init** | the first program the kernel starts (PID 1). It starts everything else |
-| **getty** | the program that prints `login:` on a console |
-| **Serial console** | the UART text console (115200 8N1) where boot messages and logins appear |
-| **eMMC / uSDHC** | on-module flash storage / the SoC's SD/MMC controllers |
-| **EULA** | NXP's license for the proprietary firmware blobs |
+The full list (what each term stands for, what it is here, and why it exists)
+is **[14 · Acronyms](14-acronyms.md)**.

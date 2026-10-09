@@ -89,6 +89,10 @@ installs, and `apk del <pkg>` removes one.
 
 ## 3. Find every command and what it does
 
+First, the mental model. Most commands just read files the kernel generates:
+
+![Real files vs live kernel views](images/linux-fs.svg)
+
 The Alpine image is built on **BusyBox**: one small program that provides
 ~300 commands (`ls`, `ps`, `ip`, `vi`...). Each command is a link to
 `/bin/busybox`.
