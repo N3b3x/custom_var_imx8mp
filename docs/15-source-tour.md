@@ -26,7 +26,8 @@
 
 ## 1. SPL: `board_init_f()`, the first C code
 
-**File:** `uboot-imx/board/variscite/imx8mp_var_dart/spl.c` · runs in OCRAM, EL3, with no DDR yet.
+**File:** `uboot-imx/board/variscite/imx8mp_var_dart/spl.c` · runs in OCRAM, EL3 (the CPU's
+highest privilege level, [what that means](13-secure-world.md#2-who-runs-where-exception-levels-and-worlds)), with no DDR yet.
 
 ```c
 void board_init_f(ulong dummy)

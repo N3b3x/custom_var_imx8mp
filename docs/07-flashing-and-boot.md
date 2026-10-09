@@ -122,6 +122,7 @@ Starting kernel ...
 [    0.000000] Machine model: Variscite VAR-SOM-MX8M-PLUS on Symphony-Board
 [    0.000000] Kernel command line: console=ttymxc1,115200 root=/dev/mmcblk1p1 rootwait rw cma=704M ...
 [    0.005800] smp: Brought up 1 node, 4 CPUs                    ← TF-A's PSCI started the other 3 cores
+[    0.005810] CPU: All CPU(s) started at EL2                    ← Linux entered at the hypervisor level (EL2), then drops to EL1
 [    2.799076] Console: switching to colour frame buffer device 100x30   ← penguins appear on the screen
 [    3.375122] mmc1: new UHS-I speed SDR104 SDHC card at address 5048
 [    3.400754] EXT4-fs (mmcblk1p1): mounted filesystem ... r/w   ← the SD card's root partition

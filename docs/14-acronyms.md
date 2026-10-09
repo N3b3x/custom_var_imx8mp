@@ -141,7 +141,11 @@
 
 | Term | Stands for | On this board | Why it exists |
 | --- | --- | --- | --- |
-| **EL0 … EL3** | Exception Level 0 … 3 | apps / kernel / hypervisor / secure monitor | hardware-enforced privilege: lower levels can't touch higher ones |
+| **EL** | Exception Level | the CPU's current privilege "floor", hardware state (`PSTATE.EL`, readable as `CurrentEL`) | lets untrusted code run without being able to take over the machine. Full story: [13 §2](13-secure-world.md#2-who-runs-where-exception-levels-and-worlds) |
+| **EL0** | Exception Level 0: application | `sh`, BusyBox, your program | no privileges, so a bug only crashes that process; asks the kernel for everything (`svc`) |
+| **EL1** | Exception Level 1: OS kernel | Linux 6.18 | owns page tables, devices and interrupts for all apps; protects apps from each other |
+| **EL2** | Exception Level 2: hypervisor | U-Boot during boot; Linux's KVM stub at runtime | second-stage page tables and traps let it run several OSes isolated from each other |
+| **EL3** | Exception Level 3: secure monitor | TF-A BL31, forever | the only level that can switch secure ↔ normal world and route interrupts, so the secure world can be protected even from a compromised OS |
 | **S-EL1** | Secure EL1 | where OP-TEE would run | an OS level inside the secure world |
 | **svc** | Supervisor Call | every system call | how an app asks the kernel for something |
 | **hvc** | Hypervisor Call | KVM | kernel → hypervisor |

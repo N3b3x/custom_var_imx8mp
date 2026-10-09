@@ -31,12 +31,14 @@ and their text is searchable. They use one dark theme with a fixed role palette:
 | `linux-fs.svg` | the SD card's files vs. /proc, /sys, /dev | README, 11 |
 | `customize-map.svg` | where each kind of change goes and where it ends up | README, 08 |
 | `source-map.svg` | the source files that run at boot, in order | README, 15 |
+| `el-powers.svg` | the four exception levels: who lives there, superpowers, limits, and the hardware walls | README, 13 |
+| `el-timeline.svg` | which EL the boot CPU is on over time, incl. runtime svc/smc/IRQ trips | README, 01, 13 |
 
 ## Editing
 
 - **Generated** (edit the Python, then run it in `docs/images/_src/`):
   `smc_flow.py` → smc-flow · `dt_to_driver.py` · `dt_layers.py` · `soc_map.py` ·
-  `source_map.py` · `concepts.py` → uboot-env, linux-fs, customize-map.
+  `source_map.py` · `el_powers.py` · `el_timeline.py` · `concepts.py` → uboot-env, linux-fs, customize-map.
   They share the theme and helpers in `kit.py`.
 - **Hand-written** SVG: boot-chain, build-pipeline, imx-boot-anatomy, exception-levels, trustzone, memory-map, uboot-bootcmd, linux-to-login, storage-map. Edit them directly; keep colours from
   `_src/kit.py` (`ROLE`), and put text colour in `style="fill:…"` (inline

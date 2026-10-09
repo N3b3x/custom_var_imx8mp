@@ -9,7 +9,7 @@
 > or a real boot log.
 
 **Contents:** [The names](#1-the-names-untangled) ·
-[Who runs where](#2-who-runs-where-exception-levels-and-worlds) ·
+[Exception levels](#2-who-runs-where-exception-levels-and-worlds) ·
 [Boot hand-offs](#3-the-boot-hand-offs-who-loads-what) ·
 [What an smc does](#4-what-an-smc-does) ·
 [How TrustZone is enforced](#5-how-trustzone-is-enforced) ·
@@ -30,6 +30,9 @@
 | **OP-TEE** | an open-source Trusted Execution Environment OS that runs Trusted Applications (TAs) | optional |
 | **SPL** | U-Boot's tiny first stage: trains DDR, loads the FIT | `spl/u-boot-spl.bin` |
 
+> **EL** = *exception level*, the CPU privilege level (EL0 apps … EL3 secure
+> monitor). What separates them and what each can do: [§2](#2-who-runs-where-exception-levels-and-worlds).
+>
 > **"BL" numbers are boot-stage names, not privilege levels.** BL31 happens to
 > run at EL3 and BL33 at EL2, but "BL32" doesn't mean "EL3-2". They are just
 > labels from the TF-A architecture.
@@ -45,11 +48,77 @@ In one sentence each:
 
 ## 2. Who runs where: exception levels and worlds
 
-![Exception levels and the two worlds](images/exception-levels.svg)
+### 2.1 The idea in one picture
 
-The Cortex-A53 has four **exception levels**: EL0 (least privileged) to EL3
-(most). Orthogonal to that, it is in one of two **security states**, also
-called **worlds**:
+Think of the CPU as a building with **four floors**. Whoever is on a higher
+floor holds keys that the floors below don't have: they set the rules for the
+floors below and can step in when something goes wrong. The CPU is always on
+exactly one floor, and there are no stairs, only two kinds of lift:
+**exceptions** take you up, and **`eret`** takes you down.
+
+![Exception levels: four floors and what separates them](images/el-powers.svg)
+
+Why have four at all? Each floor protects the one below it from the one below
+*that*:
+
+| Level | Name | Protects… | …from | On your board |
+| --- | --- | --- | --- | --- |
+| **EL0** | application | – | – | `init`, `sh`, your program |
+| **EL1** | OS kernel | each app and the kernel | other apps | Linux kernel |
+| **EL2** | hypervisor | each OS | other OSes (virtual machines) | U-Boot at boot; Linux's KVM stub |
+| **EL3** | secure monitor | the secure world and the chip's security settings | every OS, including a compromised one | TF-A BL31 |
+
+### 2.2 What actually separates them
+
+Nothing here is a software convention. These are rules built into the
+Cortex-A53, and code on a lower level cannot get around them:
+
+| # | Mechanism | What it means in practice |
+| --- | --- | --- |
+| 1 | **The current level is CPU state** (`PSTATE.EL`) | No instruction sets it. The kernel's first instructions just *read* it: `mrs x1, CurrentEL; cmp x1, #CurrentEL_EL2` (`arch/arm64/kernel/head.S`) |
+| 2 | **System registers belong to a level** | `SCTLR_EL1`, `HCR_EL2`, `SCR_EL3` …: the suffix is the lowest level allowed to touch it. EL1 writing `SCR_EL3` gets an *undefined instruction* exception, not a write |
+| 3 | **Entry points are fixed by the higher level** | Each level has its own vector table (`VBAR_ELx`) and stack (`SP_ELx`). You can't pick where you land when you go up; the higher level already decided |
+| 4 | **Each level has its own view of memory** | EL1's page tables (`TTBR0/1_EL1`) map the kernel and apps. EL2 can add a **second stage** (`VTTBR_EL2`) on top, so an OS only sees RAM the hypervisor gives it. EL3 has its own tables |
+| 5 | **The level above configures the one below** | `SCR_EL3` (set by BL31) decides the world and where interrupts go. `HCR_EL2` decides which EL1 actions trap to EL2 (`TSC`: trap `smc`, `TWI`: trap `wfi`, `VM`: enable stage 2 …) |
+| 6 | **Interrupts and errors are routed upward** | the higher level chooses which level handles IRQ, FIQ and external aborts, so a lower level can't hide from them |
+
+### 2.3 The superpowers of each level
+
+| Level | Can do that the levels below can't | Real example on this board |
+| --- | --- | --- |
+| **EL3** | switch worlds (`SCR_EL3.NS`); route interrupts/errors; answer every `smc`; access secure *and* normal memory | TF-A sets `scr_el3 \|= SCR_NS_BIT` when it builds the normal-world context (`lib/el3_runtime/aarch64/context_mgmt.c`), then `eret`s into U-Boot |
+| **EL2** | second-stage page tables; trap and emulate an OS's instructions; virtual interrupts and timers | U-Boot runs here during boot; Linux installs its KVM stub: `kvm [1]: Hyp nVHE mode initialized successfully` |
+| **EL1** | page tables for every process; device registers; masking interrupts; handling faults and syscalls | the kernel maps `/dev/rtc0`'s chip, schedules `sh`, kills a process that touches bad memory |
+| **EL0** | nothing extra, which is the point: a crash or bug only hurts that one process | `ls`, `top`, your app |
+
+And the costs that come with the power:
+
+- **A bug at EL3 is a bug in the whole chip's security.** That's why BL31 is
+  small (43 KiB here), audited, and pinned to an exact commit.
+- **EL2 is invisible until used.** On this board nothing runs virtual
+  machines, so EL2 holds only the stub, but it *could* host KVM guests.
+- **EL1 is trusted by every app on the system,** so a kernel driver bug can
+  crash everything. EL0 code can't.
+
+### 2.4 Moving between levels
+
+![The boot CPU's elevator log](images/el-timeline.svg)
+
+| Direction | How | Who uses it here |
+| --- | --- | --- |
+| **up** to EL1 | `svc #0` (system call), or an interrupt/fault | every `open`, `read`, `ioctl`; timer ticks; page faults |
+| **up** to EL2 | `hvc #0` | KVM; not in normal use on this image |
+| **up** to EL3 | `smc #0` | PSCI: CPU_ON for CPUs 1–3 at boot, `reboot`, `poweroff`; NXP SiP calls |
+| **down** | `eret` | BL31 → U-Boot (EL2) at boot; Linux EL2 → EL1 in `head.S`; every syscall returning to EL0 |
+
+On the way up the CPU saves where you were (`ELR_ELx`) and the previous
+state (`SPSR_ELx`). `eret` restores exactly that. This is why a lower level
+can't fake its way up: it can only *request* an entry, at a door the higher
+level built.
+
+### 2.5 Levels vs. worlds: two different axes
+
+"Level" (EL0–EL3) and "world" (secure / normal) are **independent**:
 
 | | Secure world | Normal world |
 | --- | --- | --- |
@@ -58,17 +127,31 @@ called **worlds**:
 | EL1 | OP-TEE OS *(if built)* | Linux kernel |
 | EL0 | Trusted Applications *(if built)* | your applications |
 
-Three things are easy to get wrong:
+![Exception levels and the two worlds](images/exception-levels.svg)
 
-1. **The Linux kernel enters at EL2, not EL1.** BL31 enters U-Boot at EL2
-   (`get_spsr_for_bl33_entry()` in imx-atf), U-Boot boots Linux at EL2, and
-   Linux keeps a tiny hypervisor stub there for KVM before dropping to EL1.
-   Your boot log proves it: `CPU: All CPU(s) started at EL2` and
-   `kvm [1]: Hyp nVHE mode initialized successfully`.
-2. **Applications can never call `smc`.** Only EL1 and above can. An app asks
-   the kernel (`ioctl`), and the kernel's driver issues the `smc`.
-3. **U-Boot is not in the runtime path.** After `booti` it is gone. BL31 (and
-   OP-TEE, if present) are the only firmware left running.
+- The **level** limits what *code* may do on the CPU.
+- The **world** limits what *memory and devices* that code can reach, and it
+  is enforced on the bus (§5).
+- So OP-TEE at S-EL1 is "only" EL1, yet it can read secure RAM that the
+  Linux kernel, also EL1, can never see.
+
+### 2.6 Myths worth unlearning
+
+1. **"EL3 is the same as BL31."** No: EL3 is a CPU *level*, and BL31 is the
+   *firmware* that happens to run there. The Boot ROM and SPL also run at EL3,
+   before BL31 exists.
+2. **"BL33 means EL3-something."** No: BL numbers are boot stages
+   (see [§1](#1-the-names-untangled)). BL33 (U-Boot) runs at EL2.
+3. **"root can do anything."** Root is a Linux idea at EL0/EL1. It can't
+   switch worlds, read secure memory, or change BL31's settings.
+4. **"The kernel runs at EL1, so it starts there."** On this board it
+   *enters at EL2*: `CPU: All CPU(s) started at EL2`. It keeps a KVM stub at
+   EL2 and drops itself to EL1 with `eret`.
+5. **"Apps can call the secure world."** Only EL1 and above can execute
+   `smc`. An app asks the kernel (`ioctl`), and the kernel's driver issues
+   the `smc`.
+6. **"U-Boot is still around."** After `booti` it is gone. BL31 (and OP-TEE,
+   if present) are the only firmware left running.
 
 ## 3. The boot hand-offs: who loads what
 

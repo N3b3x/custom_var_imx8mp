@@ -29,10 +29,18 @@ Three ideas explain the whole picture:
    way down.** Boot ROM, SPL and BL31 run at EL3 in the secure world. BL31
    then drops to EL2 in the normal world for U-Boot, and Linux continues from
    there.
+   (**EL** = *exception level*: the CPU's privilege floor, EL3 highest, EL0
+   lowest. Each floor has powers the ones below physically don't have, see
+   [13 · Secure world §2](13-secure-world.md#2-who-runs-where-exception-levels-and-worlds).)
 3. **Almost everything exits; one thing stays.** The Boot ROM, SPL and U-Boot
    are gone once Linux runs. **TF-A BL31 stays resident** at EL3 for the life
    of the system. Linux calls it to start CPUs, reboot, and change DDR
    frequency. See [13 · Secure world](13-secure-world.md).
+
+Which floor the boot CPU is on, from power-on to your app, and the brief trips
+back up at runtime:
+
+![The boot CPU's elevator log](images/el-timeline.svg)
 
 ## 2. Each stage in detail
 

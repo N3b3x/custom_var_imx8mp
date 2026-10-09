@@ -68,6 +68,11 @@ stage loads the next:
 | 5 | **U-Boot proper** (BL33) | EL2 · non-secure | DDR `0x4020_0000` | picks the DTB, loads `/boot/Image.gz`, `booti`, then exits | `uboot-imx` |
 | 6 | **Linux 6.18** | EL2 → EL1 · non-secure | DDR `0x4060_0000` | starts CPUs 1–3 via BL31, mounts the SD card, runs `/sbin/init` | `linux-imx` + rootfs |
 
+> **EL = Exception Level**, the CPU's privilege "floor": **EL3** (secure
+> monitor, most powerful) › **EL2** (hypervisor) › **EL1** (OS kernel) ›
+> **EL0** (apps). Boot starts at the top and only ever walks *down*.
+> [What separates them, and what each can do ↓](#exception-levels-in-60-seconds)
+
 The first three stages travel together in **one file**, `imx-boot.bin`, which
 the build writes at 32 KiB on the card. This is what's inside it, and who
 copies each part where:
@@ -114,6 +119,31 @@ See every command with its explanation without building anything:
 ---
 
 ## 3. The secure world in one page
+
+### Exception levels in 60 seconds
+
+The Cortex-A53 always runs at one of four **exception levels (ELs)**. A
+higher level can do things a lower one physically can't, and it sets the
+rules for the levels below:
+
+| Level | Who's there on your board | Its superpower | What stops the level below |
+| --- | --- | --- | --- |
+| **EL3** · secure monitor | TF-A BL31 (forever) | switches between secure and normal world (`SCR_EL3.NS`); handles every `smc` | only EL3 can write `SCR_EL3` |
+| **EL2** · hypervisor | U-Boot at boot, then Linux's KVM stub | second-stage page tables: decides what RAM an OS sees; traps OS instructions | `HCR_EL2` traps, stage-2 tables |
+| **EL1** · OS kernel | Linux | page tables for every app, device registers, interrupts | the MMU: apps only see their own memory |
+| **EL0** · applications | `sh`, your program | none, so a crash only hurts itself | must ask the kernel with `svc` |
+
+The walls are **hardware**: the current level is CPU state that no
+instruction can raise. Going **up** only happens through an exception
+(`svc`, `hvc`, `smc`, an interrupt), which lands at an entry point the higher
+level chose. Going **down** only happens with `eret`.
+
+![Exception levels: four floors and what separates them](docs/images/el-powers.svg)
+
+Full explanation, with the source lines, the elevator timeline and common
+myths: **[13 · Secure world §2](docs/13-secure-world.md#2-who-runs-where-exception-levels-and-worlds)**.
+
+### Levels and worlds together
 
 ![Who runs where: exception levels and the two worlds](docs/images/exception-levels.svg)
 
@@ -220,6 +250,7 @@ any of them for full size.
 | [![SoC map](docs/images/soc-map.svg)](docs/images/soc-map.svg)<br>**[The chip, block by block](docs/14-acronyms.md)**: every acronym on the SoC | [![device tree layers](docs/images/dt-layers.svg)](docs/images/dt-layers.svg)<br>**[Device tree layers](docs/04-kernel.md#device-trees)**: SoC → SoM → carrier → revision | [![dt to driver](docs/images/dt-to-driver.svg)](docs/images/dt-to-driver.svg)<br>**[DT node → driver](docs/04-kernel.md#your-own-device-tree)**: how Linux binds hardware |
 | [![memory map](docs/images/memory-map.svg)](docs/images/memory-map.svg)<br>**[Memory map](docs/01-boot-flow.md#4-where-things-live-in-ram)**: 4 GiB DDR, the booti zoom | [![storage](docs/images/storage-map.svg)](docs/images/storage-map.svg)<br>**[Storage names](docs/01-boot-flow.md#5-storage-the-sd-card-and-the-names)**: uSDHC ↔ mmc ↔ mmcblk | [![u-boot env](docs/images/uboot-env.svg)](docs/images/uboot-env.svg)<br>**[U-Boot variables](docs/03-uboot.md#where-the-variables-come-from)**: the 4 layers |
 | [![linux fs](docs/images/linux-fs.svg)](docs/images/linux-fs.svg)<br>**[/proc, /sys, /dev](docs/11-using-the-board.md#3-find-every-command-and-what-it-does)**: the live kernel views | [![customize](docs/images/customize-map.svg)](docs/images/customize-map.svg)<br>**[Where your changes go](docs/08-customizing.md)** | [![source map](docs/images/source-map.svg)](docs/images/source-map.svg)<br>**[The code, in order](docs/15-source-tour.md)**: files that run at boot |
+| [![EL timeline](docs/images/el-timeline.svg)](docs/images/el-timeline.svg)<br>**[EL elevator log](docs/13-secure-world.md#24-moving-between-levels)**: which level the CPU is on, over time | | |
 
 ## Documentation
 
