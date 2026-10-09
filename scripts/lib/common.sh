@@ -214,7 +214,7 @@ check_disk_space() {
 }
 
 # Human-readable size of a file.
-hsize() { du -h "$1" 2>/dev/null | cut -f1; }
+hsize() { [[ -e $1 ]] || { echo "?"; return 0; }; du -h "$1" | cut -f1; }
 
 # -----------------------------------------------------------------------------
 # git_checkout <name> <url> <branch> <rev> <dest>

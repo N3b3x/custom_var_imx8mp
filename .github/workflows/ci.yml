@@ -17,8 +17,14 @@ jobs:
 
       - name: explain mode (dry-run) of every step
         run: |
+          set -o pipefail
           ./build.sh info
-          for step in uboot kernel rootfs image; do
-            ./build.sh --dry-run "$step" > /dev/null
+          for args in uboot kernel rootfs image "-r alpine rootfs"; do
+            echo "::group::--dry-run $args"
+            ./build.sh --dry-run $args 2>&1 | tee out.log
+            echo "::endgroup::"
+            # errors inside subshells do not change the exit code, so also scan the output
+            if grep -E "FAILED|ERROR:" out.log; then
+              echo "::error::--dry-run $args reported an error"; exit 1
+            fi
           done
-          ./build.sh --dry-run -r alpine rootfs > /dev/null

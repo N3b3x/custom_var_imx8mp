@@ -41,7 +41,8 @@ build_debian() {
   # Running arm64 binaries (dpkg maintainer scripts) on an x86 PC needs
   # qemu-user-static registered with binfmt_misc. Check it early.
   if [[ $(uname -m) != aarch64 && ! -e /proc/sys/fs/binfmt_misc/qemu-aarch64 ]]; then
-    die "arm64 binfmt handler missing: sudo apt install qemu-user-static binfmt-support"
+    local msg="arm64 binfmt handler missing: sudo apt install qemu-user-static binfmt-support"
+    if [[ $DRY_RUN == 1 ]]; then warn "$msg (ignored in dry-run)"; else die "$msg"; fi
   fi
 
   # Pick how mmdebstrap gets root rights for the chroot:
